@@ -30,7 +30,28 @@
 
 $capabilities = array(
 
-    'mod/scorm:viewreport' => array(
+	'mod/scorm:viewreports' => array(
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => array(
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        )
+    ),
+	'mod/scorm:viewreport' => array(
+
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => array(
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+			'admin' => CAP_ALLOW
+        )
+    ),
+	'mod/scorm:test' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
