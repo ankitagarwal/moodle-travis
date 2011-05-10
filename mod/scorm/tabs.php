@@ -29,7 +29,7 @@ if (has_capability('mod/scorm:savetrack', $contextmodule)) {
 	$row[] = new tabobject('info', "$CFG->wwwroot/mod/scorm/view.php?id=$cm->id", get_string('info', 'scorm'));
 }
 if (has_capability('mod/scorm:viewreport', $contextmodule)) {
-    $row[] = new tabobject('reports', "$CFG->wwwroot/mod/scorm/report.php?id=$cm->id", get_string('results', 'scorm'));
+    $row[] = new tabobject('reports', "$CFG->wwwroot/mod/scorm/report.php?id=$cm->id", get_string('reports', 'scorm'));
 }
 
 if ($currenttab == 'info' && count($row) == 1) {
