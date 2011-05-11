@@ -31,12 +31,15 @@ function scorm_report_list($context) {
         }
     }
     $reportlist = array();
+    $i=0;
     foreach ($reportcaps as $name => $capability){
         if (empty($capability)){
             $capability = 'mod/scorm:viewreports';
         }
         if (has_capability($capability, $context)){
-            $reportlist[] = $name;
+            $reportlist[$i]->name = $name;
+            $reportlist[$i]->plugindir = $reportdirs[$name];
+            $i++;
         }
     }
     return $reportlist;

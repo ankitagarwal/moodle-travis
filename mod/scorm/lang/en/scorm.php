@@ -236,6 +236,7 @@ $string['scormtype_help'] = 'This setting determines how the package is included
 * Downloaded package - Enables a package URL to be specified. The package will be unzipped and saved locally, and updated when the external SCORM package is updated.
 * Local IMS content repository - Enables a package to be selected from within an IMS repository';
 $string['scorm:viewreport'] = 'View reports';
+$string['scorm:viewreports'] = 'View reports';
 $string['scorm:viewscores'] = 'View scores';
 $string['scrollbars'] = 'Allow the window to be scrolled';
 $string['selectall'] = 'Select all';
