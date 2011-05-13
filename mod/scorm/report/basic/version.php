@@ -29,4 +29,4 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 0.1;           // If version == 0 then module will not be installed
+$plugin->version  = 0.2;           // If version == 0 then module will not be installed

@@ -5,6 +5,6 @@
     }
     if (has_capability('mod/scorm:viewreports', $contextmodule)) {
             echo '<p>';
-            echo '<a href="'.$CFG->wwwroot.'/mod/scorm/report.php?mode=basic&id='.$id.'">'.get_string('basic').'</a>';
+            echo '<a href="'.$CFG->wwwroot.'/mod/scorm/report.php?mode=basic&id='.$id.'">'.get_string('basic','scorm_basic').'</a>';
             echo '</p>';
     }

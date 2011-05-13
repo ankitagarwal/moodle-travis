@@ -16,7 +16,7 @@
 
 class scorm_default_report {
 
-    function display($cm, $course, $quiz) {     /// This function just displays the report
+    function display($cm, $course, $quiz, $a, $b, $attempt) {     /// This function just displays the report
         return true;
     }
     function settings($cm, $course, $quiz) {     /// This function just displays the settings
