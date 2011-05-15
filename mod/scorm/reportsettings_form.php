@@ -26,8 +26,6 @@ class mod_scorm_report_settings extends moodleform {
         $mform->addElement('text', 'pagesize', get_string('pagesize', 'scorm'));
         $mform->setType('pagesize', PARAM_INT);
 
-        $mform->addElement('selectyesno', 'detailedrep', get_string('details', 'scorm'));
-
         $this->add_action_buttons(false, get_string('savepreferences'));
     }
     

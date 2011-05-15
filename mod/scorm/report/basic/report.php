@@ -22,13 +22,10 @@ class scorm_basic_report extends scorm_default_report {
                 // detailed report
                 $mform = new mod_scorm_report_settings( $reporturl, compact('currentgroup') );
                 if ($fromform = $mform->get_data()) {
-                    $detailedrep = $fromform->detailedrep;
                     $pagesize = $fromform->pagesize;
                     $attemptsmode = $fromform->attemptsmode;
-                    set_user_preference('scorm_report_detailed', $detailedrep);
                     set_user_preference('scorm_report_pagesize', $pagesize);
                 } else {
-                    $detailedrep = get_user_preferences('scorm_report_detailed', false);
                     $pagesize = get_user_preferences('scorm_report_pagesize', 0);
                     $attemptsmode = optional_param('attemptsmode', SCORM_REPORT_ATTEMPTS_STUDENTS_WITH, PARAM_INT);
                 }
@@ -39,6 +36,7 @@ class scorm_basic_report extends scorm_default_report {
                 // select group menu
                 $displayoptions = array();
                 $displayoptions['id'] = $cm->id;
+                $displayoptions['mode'] = 'basic';
                 $displayoptions['attemptsmode'] = $attemptsmode;
                 $reporturlwithdisplayoptions = new moodle_url($CFG->wwwroot.'/mod/scorm/report.php', $displayoptions);
 
@@ -106,7 +104,7 @@ class scorm_basic_report extends scorm_default_report {
                     $headers[]= get_string('last','scorm');
                     $columns[]= 'score';
                     $headers[]= get_string('score','scorm');
-                    if ($detailedrep && $scoes = $DB->get_records('scorm_scoes',array("scorm"=>$scorm->id),'id')) {
+                    if ($scoes = $DB->get_records('scorm_scoes',array("scorm"=>$scorm->id),'id')) {
                         foreach ($scoes as $sco) {
                             if ($sco->launch!='') {
                                 $columns[]= 'scograde'.$sco->id;
