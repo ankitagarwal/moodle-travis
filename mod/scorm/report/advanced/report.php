@@ -1,6 +1,6 @@
 <?php
 
-class scorm_basic_report extends scorm_default_report {
+class scorm_advanced_report extends scorm_default_report {
     /**
      * Displays the report.
      */

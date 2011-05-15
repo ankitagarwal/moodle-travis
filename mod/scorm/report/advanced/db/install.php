@@ -27,7 +27,7 @@
 /**
  * Post installation procedure
  */
-function xmldb_scorm_basic_install() {
+function xmldb_scorm_advanced_install() {
 
    	global $DB;
 	
