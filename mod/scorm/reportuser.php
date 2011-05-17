@@ -1,77 +1,78 @@
 <?php
- 
- // Includes and parameters from old scorm report file
 
-    require_once("../../config.php");
-    require_once($CFG->libdir.'/tablelib.php');
-    require_once($CFG->dirroot.'/mod/scorm/locallib.php');
-    require_once($CFG->libdir.'/formslib.php');
+// Includes and parameters from old scorm report file
 
-    $id = optional_param('id', '', PARAM_INT); // Course Module ID, or
-    $a = optional_param('a', '', PARAM_INT); // SCORM ID
-    $b = optional_param('b', '', PARAM_INT); // SCO ID
-    $user = optional_param('user', '', PARAM_INT); // User ID
-    $attempt = optional_param('attempt', '1', PARAM_INT); // attempt number
-    $action = optional_param('action', '', PARAM_ALPHA);
-    $attemptids = optional_param('attemptid', array(), PARAM_RAW);
-    
+require_once("../../config.php");
+require_once($CFG->libdir.'/tablelib.php');
+require_once($CFG->dirroot.'/mod/scorm/locallib.php');
+require_once($CFG->libdir.'/formslib.php');
+
+$id = optional_param('id', '', PARAM_INT); // Course Module ID, or
+$a = optional_param('a', '', PARAM_INT); // SCORM ID
+$b = optional_param('b', '', PARAM_INT); // SCO ID
+$user = optional_param('user', '', PARAM_INT); // User ID
+$attempt = optional_param('attempt', '1', PARAM_INT); // attempt number
+$action = optional_param('action', '', PARAM_ALPHA);
+$attemptids = optional_param('attemptid', array(), PARAM_RAW);
+
 // Building the url to use for links.+ data details buildup
-    $url = new moodle_url('/mod/scorm/report.php');
-    if ($user !== '') {
-        $url->param('user', $user);
-    }
-    if ($attempt !== '1') {
-        $url->param('attempt', $attempt);
-    }
-    if ($action !== '') {
-        $url->param('action', $action);
-    }
+$url = new moodle_url('/mod/scorm/reportuser.php');
+if ($user !== '') {
+    $url->param('user', $user);
+}
+if ($attempt !== '1') {
+    $url->param('attempt', $attempt);
+}
+if ($action !== '') {
+    $url->param('action', $action);
+}
 
-    if (!empty($id)) {
-        $url->param('id', $id);
-        if (! $cm = get_coursemodule_from_id('scorm', $id)) {
+if (!empty($id)) {
+    $url->param('id', $id);
+    if (! $cm = get_coursemodule_from_id('scorm', $id)) {
+        print_error('invalidcoursemodule');
+    }
+    if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
+        print_error('coursemisconf');
+    }
+    if (! $scorm = $DB->get_record('scorm', array('id'=>$cm->instance))) {
+        print_error('invalidcoursemodule');
+    }
+} else {
+    if (!empty($b)) {
+        $url->param('b', $b);
+        if (! $sco = $DB->get_record('scorm_scoes', array('id'=>$b))) {
+            print_error('invalidactivity', 'scorm');
+        }
+        $a = $sco->scorm;
+    }
+    if (!empty($a)) {
+        $url->param('a', $a);
+        if (! $scorm = $DB->get_record('scorm', array('id'=>$a))) {
             print_error('invalidcoursemodule');
         }
-        if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
+        if (! $course = $DB->get_record('course', array('id'=>$scorm->course))) {
             print_error('coursemisconf');
         }
-        if (! $scorm = $DB->get_record('scorm', array('id'=>$cm->instance))) {
+        if (! $cm = get_coursemodule_from_instance('scorm', $scorm->id, $course->id)) {
             print_error('invalidcoursemodule');
         }
-    } else {
-        if (!empty($b)) {
-            $url->param('b', $b);
-            if (! $sco = $DB->get_record('scorm_scoes', array('id'=>$b))) {
-                print_error('invalidactivity', 'scorm');
-            }
-            $a = $sco->scorm;
-        }
-        if (!empty($a)) {
-            $url->param('a', $a);
-            if (! $scorm = $DB->get_record('scorm', array('id'=>$a))) {
-                print_error('invalidcoursemodule');
-            }
-            if (! $course = $DB->get_record('course', array('id'=>$scorm->course))) {
-                print_error('coursemisconf');
-            }
-            if (! $cm = get_coursemodule_from_instance('scorm', $scorm->id, $course->id)) {
-                print_error('invalidcoursemodule');
-            }
-        }
     }
-    $PAGE->set_url($url);
+}
+$PAGE->set_url($url);
 //END of url setting + data buildup
-    
+
 // checking login +logging +getting context
-    require_login($course->id, false, $cm);
-    $contextmodule= get_context_instance(CONTEXT_MODULE,$cm->id);
-    add_to_log($course->id, 'scorm', 'userreport', 'reportuser.php?id='.$cm->id, $scorm->id, $cm->id);
-    if (!empty($user)) {
-        $userdata = scorm_get_user_data($user);
-    } else {
-        $userdata = null;
-    }
+require_login($course->id, false, $cm);
+$contextmodule= get_context_instance(CONTEXT_MODULE, $cm->id);
+add_to_log($course->id, 'scorm', 'userreport', 'reportuser.php?id='.$cm->id, $scorm->id, $cm->id);
+if (!empty($user)) {
+    $userdata = scorm_get_user_data($user);
+} else {
+    $userdata = null;
+}
 // END of checking login +logging +getting context
+
 // Print the page header
 if (empty($noheader)) {
     $strscorms = get_string('modulenameplural', 'scorm');
@@ -101,67 +102,66 @@ if (empty($noheader)) {
 require_capability('mod/scorm:viewreports', $contextmodule);
 
 // User SCORM report
-    if (!empty($user)) {
-        if ($scoes = $DB->get_records_select('scorm_scoes',"scorm=? ORDER BY id", array($scorm->id))) {
-            if (!empty($userdata)) {
-                echo $OUTPUT->box_start('generalbox boxaligncenter');
-                echo '<div class="mdl-align">'."\n";
-                echo $OUTPUT->user_picture($userdata, array('courseid'=>$course->id));
-                echo "<a href=\"$CFG->wwwroot/user/view.php?id=$user&amp;course=$course->id\">".
+if (!empty($user)) {
+    if ($scoes = $DB->get_records_select('scorm_scoes', "scorm=? ORDER BY id", array($scorm->id))) {
+        if (!empty($userdata)) {
+            echo $OUTPUT->box_start('generalbox boxaligncenter');
+            echo '<div class="mdl-align">'."\n";
+            echo $OUTPUT->user_picture($userdata, array('courseid'=>$course->id));
+            echo "<a href=\"$CFG->wwwroot/user/view.php?id=$user&amp;course=$course->id\">".
       "$userdata->firstname $userdata->lastname</a><br />";
-                echo get_string('attempt','scorm').': '.$attempt;
-                echo '</div>'."\n";
-                echo $OUTPUT->box_end();
-
-                // Print general score data
-                $table = new html_table();
-                $table->head = array(get_string('title','scorm'),
-                                     get_string('status','scorm'),
-                                     get_string('time','scorm'),
-                                     get_string('score','scorm'),
-                 '');
-                $table->align = array('left', 'center','center','right','left');
-                $table->wrap = array('nowrap', 'nowrap','nowrap','nowrap','nowrap');
-                $table->width = '80%';
-                $table->size = array('*', '*', '*', '*', '*');
-                foreach ($scoes as $sco) {
-                    if ($sco->launch!='') {
-                        $row = array();
-                        $score = '&nbsp;';
-                        if ($trackdata = scorm_get_tracks($sco->id,$user,$attempt)) {
-                            if ($trackdata->score_raw != '') {
-                                $score = $trackdata->score_raw;
-                            }
-                            if ($trackdata->status == '') {
-                                $trackdata->status = 'notattempted';
-                            }
-                            $detailslink = '<a href="reportuser.php?b='.$sco->id.'&amp;user='.$user.'&amp;attempt='.$attempt.'" title="'.
-                                                    get_string('details','scorm').'">'.get_string('details','scorm').'</a>';
-                        } else {
-                            $trackdata->status = 'notattempted';
-                            $trackdata->total_time = '&nbsp;';
-                            $detailslink = '&nbsp;';
+            echo get_string('attempt', 'scorm').': '.$attempt;
+            echo '</div>'."\n";
+            echo $OUTPUT->box_end();
+            // Print general score data
+            $table = new html_table();
+            $table->head = array(get_string('title', 'scorm'),
+                                get_string('status', 'scorm'),
+                                get_string('time', 'scorm'),
+                                get_string('score', 'scorm'),
+                '');
+            $table->align = array('left', 'center', 'center', 'right', 'left');
+            $table->wrap = array('nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap');
+            $table->width = '80%';
+            $table->size = array('*', '*', '*', '*', '*');
+            foreach ($scoes as $sco) {
+                if ($sco->launch!='') {
+                    $row = array();
+                    $score = '&nbsp;';
+                    if ($trackdata = scorm_get_tracks($sco->id, $user, $attempt)) {
+                        if ($trackdata->score_raw != '') {
+                            $score = $trackdata->score_raw;
                         }
-                        $strstatus = get_string($trackdata->status,'scorm');
-                        $row[] = '<img src="'.$OUTPUT->pix_url($trackdata->status, 'scorm').'" alt="'.$strstatus.'" title="'.
-                        $strstatus.'" />&nbsp;'.format_string($sco->title);
-                        $row[] = get_string($trackdata->status,'scorm');
-                        $row[] = scorm_format_duration($trackdata->total_time);
-                        $row[] = $score;
-                        $row[] = $detailslink;
+                        if ($trackdata->status == '') {
+                            $trackdata->status = 'notattempted';
+                        }
+                        $detailslink = '<a href="reportuser.php?b='.$sco->id.'&amp;user='.$user.'&amp;attempt='.$attempt.'" title="'.
+                                                get_string('details', 'scorm').'">'.get_string('details', 'scorm').'</a>';
                     } else {
-                        $row = array(format_string($sco->title), '&nbsp;', '&nbsp;', '&nbsp;', '&nbsp;');
+                        $trackdata->status = 'notattempted';
+                        $trackdata->total_time = '&nbsp;';
+                        $detailslink = '&nbsp;';
                     }
-                    $table->data[] = $row;
+                    $strstatus = get_string($trackdata->status, 'scorm');
+                    $row[] = '<img src="'.$OUTPUT->pix_url($trackdata->status, 'scorm').'" alt="'.$strstatus.'" title="'.
+                    $strstatus.'" />&nbsp;'.format_string($sco->title);
+                    $row[] = get_string($trackdata->status, 'scorm');
+                    $row[] = scorm_format_duration($trackdata->total_time);
+                    $row[] = $score;
+                    $row[] = $detailslink;
+                } else {
+                    $row = array(format_string($sco->title), '&nbsp;', '&nbsp;', '&nbsp;', '&nbsp;');
                 }
-                echo html_writer::table($table);
+                $table->data[] = $row;
             }
+                echo html_writer::table($table);
         }
-    } else {
-        notice('No users to report');
     }
-if(!empty($b))    
-    if (!empty($userdata)) {
+} else {
+    notice('No users to report');
+}
+if(!empty($b))
+    if (!empty ($userdata)) {
             echo $OUTPUT->box_start('generalbox boxaligncenter');
             //print_heading(format_string($sco->title));
             echo $OUTPUT->heading('<a href="'.$CFG->wwwroot.'/mod/scorm/player.php?a='.$scorm->id.'&amp;mode=browse&amp;scoid='.$sco->id.'" target="_new">'.format_string($sco->title).'</a>');
@@ -170,9 +170,9 @@ if(!empty($b))
             echo "<a href=\"$CFG->wwwroot/user/view.php?id=$user&amp;course=$course->id\">".
                  "$userdata->firstname $userdata->lastname</a><br />";
             $scoreview = '';
-            if ($trackdata = scorm_get_tracks($sco->id,$user,$attempt)) {
+            if ($trackdata = scorm_get_tracks($sco->id, $user, $attempt)) {
                 if ($trackdata->score_raw != '') {
-                    $scoreview = get_string('score','scorm').':&nbsp;'.$trackdata->score_raw;
+                    $scoreview = get_string('score', 'scorm').':&nbsp;'.$trackdata->score_raw;
                 }
                 if ($trackdata->status == '') {
                     $trackdata->status = 'notattempted';
@@ -181,15 +181,15 @@ if(!empty($b))
                 $trackdata->status = 'notattempted';
                 $trackdata->total_time = '';
             }
-            $strstatus = get_string($trackdata->status,'scorm');
+            $strstatus = get_string($trackdata->status, 'scorm');
             echo '<img src="'.$OUTPUT->pix_url($trackdata->status, 'scorm').'" alt="'.$strstatus.'" title="'.
             $strstatus.'" />&nbsp;'.scorm_format_duration($trackdata->total_time).'<br />'.$scoreview.'<br />';
             echo '</div>'."\n";
-            echo '<hr /><h2>'.get_string('details','scorm').'</h2>';
+            echo '<hr /><h2>'.get_string('details', 'scorm').'</h2>';
 
             // Print general score data
             $table = new html_table();
-            $table->head = array(get_string('element','scorm'), get_string('value','scorm'));
+            $table->head = array(get_string('element', 'scorm'), get_string('value','scorm'));
             $table->align = array('left', 'left');
             $table->wrap = array('nowrap', 'nowrap');
             $table->width = '100%';
@@ -215,8 +215,8 @@ if(!empty($b))
                     $existelements = true;
                     $printedelements[]=$element;
                     $row = array();
-                    $row[] = get_string($key,'scorm');
-                    switch($key) {
+                    $row[] = get_string($key, 'scorm');
+                    switch ($key) {
                         case 'status':
                             $row[] = $strstatus;
                         break;
@@ -231,16 +231,16 @@ if(!empty($b))
                 }
             }
             if ($existelements) {
-                echo '<h3>'.get_string('general','scorm').'</h3>';
+                echo '<h3>'.get_string('general', 'scorm').'</h3>';
                 echo html_writer::table($table);
             }
 
             // Print Interactions data
             $table = new html_table();
-            $table->head = array(get_string('identifier','scorm'),
-                                 get_string('type','scorm'),
-                                 get_string('result','scorm'),
-                                 get_string('student_response','scorm'));
+            $table->head = array(get_string('identifier', 'scorm'),
+                                 get_string('type', 'scorm'),
+                                 get_string('result', 'scorm'),
+                                 get_string('student_response', 'scorm'));
             $table->align = array('center', 'center', 'center', 'center');
             $table->wrap = array('nowrap', 'nowrap', 'nowrap', 'nowrap');
             $table->width = '100%';
@@ -273,17 +273,17 @@ if(!empty($b))
                 $interactionid = 'cmi.interactions.'.$i.'.id';
             }
             if ($existinteraction) {
-                echo '<h3>'.get_string('interactions','scorm').'</h3>';
+                echo '<h3>'.get_string('interactions', 'scorm').'</h3>';
                 echo html_writer::table($table);
             }
 
             // Print Objectives data
             $table = new html_table();
-            $table->head = array(get_string('identifier','scorm'),
-                                 get_string('status','scorm'),
-                                 get_string('raw','scorm'),
-                                 get_string('min','scorm'),
-                                 get_string('max','scorm'));
+            $table->head = array(get_string('identifier', 'scorm'),
+                                 get_string('status', 'scorm'),
+                                 get_string('raw', 'scorm'),
+                                 get_string('min', 'scorm'),
+                                 get_string('max', 'scorm'));
             $table->align = array('center', 'center', 'center', 'center', 'center');
             $table->wrap = array('nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap');
             $table->width = '100%';
@@ -317,11 +317,11 @@ if(!empty($b))
                 $objectiveid = 'cmi.objectives.'.$i.'.id';
             }
             if ($existobjective) {
-                echo '<h3>'.get_string('objectives','scorm').'</h3>';
+                echo '<h3>'.get_string('objectives', 'scorm').'</h3>';
                 echo html_writer::table($table);
             }
             $table = new html_table();
-            $table->head = array(get_string('element','scorm'), get_string('value','scorm'));
+            $table->head = array(get_string('element', 'scorm'), get_string('value', 'scorm'));
             $table->align = array('left', 'left');
             $table->wrap = array('nowrap', 'wrap');
             $table->width = '100%';
@@ -329,12 +329,12 @@ if(!empty($b))
 
             $existelements = false;
 
-            foreach($trackdata as $element => $value) {
-                if (substr($element,0,3) == 'cmi') {
+            foreach( $trackdata as $element => $value) {
+                if (substr($element, 0, 3) == 'cmi') {
                     if (!(in_array ($element, $printedelements))) {
                         $existelements = true;
                         $row = array();
-                        $row[] = get_string($element,'scorm') != '[['.$element.']]' ? get_string($element,'scorm') : $element;
+                        $row[] = get_string($element, 'scorm') != '[['.$element.']]' ? get_string($element, 'scorm') : $element;
                         if (strpos($element, '_time') === false) {
                             $row[] = s($value);
                         } else {
@@ -345,14 +345,13 @@ if(!empty($b))
                 }
             }
             if ($existelements) {
-                echo '<h3>'.get_string('othertracks','scorm').'</h3>';
+                echo '<h3>'.get_string('othertracks', 'scorm').'</h3>';
                 echo html_writer::table($table);
             }
             echo $OUTPUT->box_end();
         } else {
             print_error('missingparameter');
         }
-    
 // Print footer
 
-    echo $OUTPUT->footer();
+echo $OUTPUT->footer();
