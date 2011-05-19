@@ -29,34 +29,20 @@ if ($action !== '') {
 
 if (!empty($id)) {
     $url->param('id', $id);
-    if (! $cm = get_coursemodule_from_id('scorm', $id)) {
-        print_error('invalidcoursemodule');
-    }
-    if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-        print_error('coursemisconf');
-    }
-    if (! $scorm = $DB->get_record('scorm', array('id'=>$cm->instance))) {
-        print_error('invalidcoursemodule');
-    }
+    $cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
+    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+    $scorm = $DB->get_record('scorm', array('id'=>$cm->instance), '*', MUST_EXIST);
 } else {
     if (!empty($b)) {
         $url->param('b', $b);
-        if (! $sco = $DB->get_record('scorm_scoes', array('id'=>$b))) {
-            print_error('invalidactivity', 'scorm');
-        }
+        $sco = $DB->get_record('scorm_scoes', array('id'=>$b), '*', MUST_EXIST);
         $a = $sco->scorm;
     }
     if (!empty($a)) {
         $url->param('a', $a);
-        if (! $scorm = $DB->get_record('scorm', array('id'=>$a))) {
-            print_error('invalidcoursemodule');
-        }
-        if (! $course = $DB->get_record('course', array('id'=>$scorm->course))) {
-            print_error('coursemisconf');
-        }
-        if (! $cm = get_coursemodule_from_instance('scorm', $scorm->id, $course->id)) {
-            print_error('invalidcoursemodule');
-        }
+        $scorm = $DB->get_record('scorm', array('id'=>$a), '*', MUST_EXIST);
+        $course = $DB->get_record('course', array('id'=>$scorm->course), '*', MUST_EXIST);
+        $cm = get_coursemodule_from_instance('scorm', $scorm->id, $course->id, false, MUST_EXIST);
     }
 }
 $PAGE->set_url($url);
@@ -96,6 +82,13 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($scorm->name));
 // End of Print the page header
 
+//Parameter Checking
+if(empty($user)) {
+    print_error('invaliduser');
+}
+if(!empty($b) && empty ($userdata)) {
+    print_error('missingparameter');
+}
 //Capabality Check + Can be moded to add ability for sudends to check there own attempts
 require_capability('mod/scorm:viewreports', $contextmodule);
 
@@ -155,201 +148,191 @@ if (!empty($user)) {
                 echo html_writer::table($table);
         }
     }
-} else {
-    notice('No users to report');
 }
-if(!empty($b))
+if(!empty($b)) {
     if (!empty ($userdata)) {
-            echo $OUTPUT->box_start('generalbox boxaligncenter');
-            //print_heading(format_string($sco->title));
-            echo $OUTPUT->heading('<a href="'.$CFG->wwwroot.'/mod/scorm/player.php?a='.$scorm->id.'&amp;mode=browse&amp;scoid='.$sco->id.'" target="_new">'.format_string($sco->title).'</a>');
-            echo '<div class="mdl-align">'."\n";
-            echo $OUTPUT->user_picture($userdata, array('courseid'=>$course->id));
-            echo "<a href=\"$CFG->wwwroot/user/view.php?id=$user&amp;course=$course->id\">".
+        echo $OUTPUT->box_start('generalbox boxaligncenter');
+        //print_heading(format_string($sco->title));
+        echo $OUTPUT->heading('<a href="'.$CFG->wwwroot.'/mod/scorm/player.php?a='.$scorm->id.'&amp;mode=browse&amp;scoid='.$sco->id.'" target="_new">'.format_string($sco->title).'</a>');
+        echo '<div class="mdl-align">'."\n";
+        echo $OUTPUT->user_picture($userdata, array('courseid'=>$course->id));
+        echo "<a href=\"$CFG->wwwroot/user/view.php?id=$user&amp;course=$course->id\">".
                  "$userdata->firstname $userdata->lastname</a><br />";
-            $scoreview = '';
-            if ($trackdata = scorm_get_tracks($sco->id, $user, $attempt)) {
-                if ($trackdata->score_raw != '') {
-                    $scoreview = get_string('score', 'scorm').':&nbsp;'.$trackdata->score_raw;
-                }
-                if ($trackdata->status == '') {
-                    $trackdata->status = 'notattempted';
-                }
-            } else {
+        $scoreview = '';
+        if ($trackdata = scorm_get_tracks($sco->id, $user, $attempt)) {
+            if ($trackdata->score_raw != '') {
+                $scoreview = get_string('score', 'scorm').':&nbsp;'.$trackdata->score_raw;
+            }
+            if ($trackdata->status == '') {
                 $trackdata->status = 'notattempted';
-                $trackdata->total_time = '';
             }
-            $strstatus = get_string($trackdata->status, 'scorm');
-            echo '<img src="'.$OUTPUT->pix_url($trackdata->status, 'scorm').'" alt="'.$strstatus.'" title="'.
-            $strstatus.'" />&nbsp;'.scorm_format_duration($trackdata->total_time).'<br />'.$scoreview.'<br />';
-            echo '</div>'."\n";
-            echo '<hr /><h2>'.get_string('details', 'scorm').'</h2>';
-
-            // Print general score data
-            $table = new html_table();
-            $table->head = array(get_string('element', 'scorm'), get_string('value','scorm'));
-            $table->align = array('left', 'left');
-            $table->wrap = array('nowrap', 'nowrap');
-            $table->width = '100%';
-            $table->size = array('*', '*');
-
-            $existelements = false;
-            if ($scorm->version == 'SCORM_1.3') {
-                $elements = array('raw' => 'cmi.score.raw',
-                                  'min' => 'cmi.score.min',
-                                  'max' => 'cmi.score.max',
-                                  'status' => 'cmi.completion_status',
-                                  'time' => 'cmi.total_time');
-            } else {
-                $elements = array('raw' => 'cmi.core.score.raw',
-                                  'min' => 'cmi.core.score.min',
-                                  'max' => 'cmi.core.score.max',
-                                  'status' => 'cmi.core.lesson_status',
-                                  'time' => 'cmi.core.total_time');
+        } else {
+            $trackdata->status = 'notattempted';
+            $trackdata->total_time = '';
+        }
+        $strstatus = get_string($trackdata->status, 'scorm');
+        echo '<img src="'.$OUTPUT->pix_url($trackdata->status, 'scorm').'" alt="'.$strstatus.'" title="'.
+        $strstatus.'" />&nbsp;'.scorm_format_duration($trackdata->total_time).'<br />'.$scoreview.'<br />';
+        echo '</div>'."\n";
+        echo '<hr /><h2>'.get_string('details', 'scorm').'</h2>';
+        // Print general score data
+        $table = new html_table();
+        $table->head = array(get_string('element', 'scorm'), get_string('value','scorm'));
+        $table->align = array('left', 'left');
+        $table->wrap = array('nowrap', 'nowrap');
+        $table->width = '100%';
+        $table->size = array('*', '*');
+        $existelements = false;
+        if ($scorm->version == 'SCORM_1.3') {
+            $elements = array('raw' => 'cmi.score.raw',
+                              'min' => 'cmi.score.min',
+                              'max' => 'cmi.score.max',
+                              'status' => 'cmi.completion_status',
+                              'time' => 'cmi.total_time');
+        } else {
+            $elements = array('raw' => 'cmi.core.score.raw',
+                              'min' => 'cmi.core.score.min',
+                              'max' => 'cmi.core.score.max',
+                              'status' => 'cmi.core.lesson_status',
+                              'time' => 'cmi.core.total_time');
+        }
+        $printedelements = array();
+        foreach ($elements as $key => $element) {
+            if (isset($trackdata->$element)) {
+                $existelements = true;
+                $printedelements[]=$element;
+                $row = array();
+                $row[] = get_string($key, 'scorm');
+                switch ($key) {
+                    case 'status':
+                        $row[] = $strstatus;
+                    break;
+                    case 'time':
+                        $row[] = s(scorm_format_duration($trackdata->$element));
+                    break;
+                    default:
+                        s($trackdata->$element);
+                    break;
+                }
+                $table->data[] = $row;
             }
-            $printedelements = array();
-            foreach ($elements as $key => $element) {
-                if (isset($trackdata->$element)) {
-                    $existelements = true;
+        }
+        if ($existelements) {
+            echo '<h3>'.get_string('general', 'scorm').'</h3>';
+            echo html_writer::table($table);
+        }
+        // Print Interactions data
+        $table = new html_table();
+        $table->head = array(get_string('identifier', 'scorm'),
+                             get_string('type', 'scorm'),
+                             get_string('result', 'scorm'),
+                             get_string('student_response', 'scorm'));
+        $table->align = array('center', 'center', 'center', 'center');
+        $table->wrap = array('nowrap', 'nowrap', 'nowrap', 'nowrap');
+        $table->width = '100%';
+        $table->size = array('*', '*', '*', '*', '*');
+        $existinteraction = false;
+        $i = 0;
+        $interactionid = 'cmi.interactions.'.$i.'.id';
+
+        while (isset($trackdata->$interactionid)) {
+            $existinteraction = true;
+            $printedelements[]=$interactionid;
+            $elements = array($interactionid,
+                              'cmi.interactions.'.$i.'.type',
+                              'cmi.interactions.'.$i.'.result',
+                              'cmi.interactions.'.$i.'.learner_response');
+            $row = array();
+            foreach ($elements as $element) {
+               if (isset($trackdata->$element)) {
+                    $row[] = s($trackdata->$element);
                     $printedelements[]=$element;
+                } else {
+                    $row[] = '&nbsp;';
+                }
+            }
+            $table->data[] = $row;
+            $i++;
+            $interactionid = 'cmi.interactions.'.$i.'.id';
+        }
+        if ($existinteraction) {
+            echo '<h3>'.get_string('interactions', 'scorm').'</h3>';
+            echo html_writer::table($table);
+        }
+
+        // Print Objectives data
+        $table = new html_table();
+        $table->head = array(get_string('identifier', 'scorm'),
+                             get_string('status', 'scorm'),
+                             get_string('raw', 'scorm'),
+                             get_string('min', 'scorm'),
+                             get_string('max', 'scorm'));
+        $table->align = array('center', 'center', 'center', 'center', 'center');
+        $table->wrap = array('nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap');
+        $table->width = '100%';
+        $table->size = array('*', '*', '*', '*', '*');
+        $existobjective = false;
+
+        $i = 0;
+        $objectiveid = 'cmi.objectives.'.$i.'.id';
+
+        while (isset($trackdata->$objectiveid)) {
+            $existobjective = true;
+            $printedelements[]=$objectiveid;
+            $elements = array($objectiveid,
+                              'cmi.objectives.'.$i.'.status',
+                              'cmi.objectives.'.$i.'.score.raw',
+                              'cmi.objectives.'.$i.'.score.min',
+                              'cmi.objectives.'.$i.'.score.max');
+            $row = array();
+            foreach ($elements as $element) {
+               if (isset($trackdata->$element)) {
+                    $row[] = s($trackdata->$element);
+                    $printedelements[]=$element;
+                } else {
+                    $row[] = '&nbsp;';
+                }
+            }
+            $table->data[] = $row;
+
+            $i++;
+            $objectiveid = 'cmi.objectives.'.$i.'.id';
+        }
+        if ($existobjective) {
+            echo '<h3>'.get_string('objectives', 'scorm').'</h3>';
+            echo html_writer::table($table);
+        }
+        $table = new html_table();
+        $table->head = array(get_string('element', 'scorm'), get_string('value', 'scorm'));
+        $table->align = array('left', 'left');
+        $table->wrap = array('nowrap', 'wrap');
+        $table->width = '100%';
+        $table->size = array('*', '*');
+
+        $existelements = false;
+
+        foreach( $trackdata as $element => $value) {
+            if (substr($element, 0, 3) == 'cmi') {
+                if (!(in_array ($element, $printedelements))) {
+                    $existelements = true;
                     $row = array();
-                    $row[] = get_string($key, 'scorm');
-                    switch ($key) {
-                        case 'status':
-                            $row[] = $strstatus;
-                        break;
-                        case 'time':
-                            $row[] = s(scorm_format_duration($trackdata->$element));
-                        break;
-                        default:
-                            s($trackdata->$element);
-                        break;
+                    $row[] = get_string($element, 'scorm') != '[['.$element.']]' ? get_string($element, 'scorm') : $element;
+                    if (strpos($element, '_time') === false) {
+                        $row[] = s($value);
+                    } else {
+                        $row[] = s(scorm_format_duration($value));
                     }
                     $table->data[] = $row;
                 }
             }
-            if ($existelements) {
-                echo '<h3>'.get_string('general', 'scorm').'</h3>';
-                echo html_writer::table($table);
-            }
-
-            // Print Interactions data
-            $table = new html_table();
-            $table->head = array(get_string('identifier', 'scorm'),
-                                 get_string('type', 'scorm'),
-                                 get_string('result', 'scorm'),
-                                 get_string('student_response', 'scorm'));
-            $table->align = array('center', 'center', 'center', 'center');
-            $table->wrap = array('nowrap', 'nowrap', 'nowrap', 'nowrap');
-            $table->width = '100%';
-            $table->size = array('*', '*', '*', '*', '*');
-
-            $existinteraction = false;
-
-            $i = 0;
-            $interactionid = 'cmi.interactions.'.$i.'.id';
-
-            while (isset($trackdata->$interactionid)) {
-                $existinteraction = true;
-                $printedelements[]=$interactionid;
-                $elements = array($interactionid,
-                                  'cmi.interactions.'.$i.'.type',
-                                  'cmi.interactions.'.$i.'.result',
-                                  'cmi.interactions.'.$i.'.learner_response');
-                $row = array();
-                foreach ($elements as $element) {
-                    if (isset($trackdata->$element)) {
-                        $row[] = s($trackdata->$element);
-                        $printedelements[]=$element;
-                    } else {
-                        $row[] = '&nbsp;';
-                    }
-                }
-                $table->data[] = $row;
-
-                $i++;
-                $interactionid = 'cmi.interactions.'.$i.'.id';
-            }
-            if ($existinteraction) {
-                echo '<h3>'.get_string('interactions', 'scorm').'</h3>';
-                echo html_writer::table($table);
-            }
-
-            // Print Objectives data
-            $table = new html_table();
-            $table->head = array(get_string('identifier', 'scorm'),
-                                 get_string('status', 'scorm'),
-                                 get_string('raw', 'scorm'),
-                                 get_string('min', 'scorm'),
-                                 get_string('max', 'scorm'));
-            $table->align = array('center', 'center', 'center', 'center', 'center');
-            $table->wrap = array('nowrap', 'nowrap', 'nowrap', 'nowrap', 'nowrap');
-            $table->width = '100%';
-            $table->size = array('*', '*', '*', '*', '*');
-
-            $existobjective = false;
-
-            $i = 0;
-            $objectiveid = 'cmi.objectives.'.$i.'.id';
-
-            while (isset($trackdata->$objectiveid)) {
-                $existobjective = true;
-                $printedelements[]=$objectiveid;
-                $elements = array($objectiveid,
-                                  'cmi.objectives.'.$i.'.status',
-                                  'cmi.objectives.'.$i.'.score.raw',
-                                  'cmi.objectives.'.$i.'.score.min',
-                                  'cmi.objectives.'.$i.'.score.max');
-                $row = array();
-                foreach ($elements as $element) {
-                    if (isset($trackdata->$element)) {
-                        $row[] = s($trackdata->$element);
-                        $printedelements[]=$element;
-                    } else {
-                        $row[] = '&nbsp;';
-                    }
-                }
-                $table->data[] = $row;
-
-                $i++;
-                $objectiveid = 'cmi.objectives.'.$i.'.id';
-            }
-            if ($existobjective) {
-                echo '<h3>'.get_string('objectives', 'scorm').'</h3>';
-                echo html_writer::table($table);
-            }
-            $table = new html_table();
-            $table->head = array(get_string('element', 'scorm'), get_string('value', 'scorm'));
-            $table->align = array('left', 'left');
-            $table->wrap = array('nowrap', 'wrap');
-            $table->width = '100%';
-            $table->size = array('*', '*');
-
-            $existelements = false;
-
-            foreach( $trackdata as $element => $value) {
-                if (substr($element, 0, 3) == 'cmi') {
-                    if (!(in_array ($element, $printedelements))) {
-                        $existelements = true;
-                        $row = array();
-                        $row[] = get_string($element, 'scorm') != '[['.$element.']]' ? get_string($element, 'scorm') : $element;
-                        if (strpos($element, '_time') === false) {
-                            $row[] = s($value);
-                        } else {
-                            $row[] = s(scorm_format_duration($value));
-                        }
-                        $table->data[] = $row;
-                    }
-                }
-            }
-            if ($existelements) {
-                echo '<h3>'.get_string('othertracks', 'scorm').'</h3>';
-                echo html_writer::table($table);
-            }
-    echo $OUTPUT->box_end();
-    } else {
-        print_error('missingparameter');
+        }
+        if ($existelements) {
+            echo '<h3>'.get_string('othertracks', 'scorm').'</h3>';
+            echo html_writer::table($table);
+        }
+        echo $OUTPUT->box_end();
     }
+}
 // Print footer
 
 echo $OUTPUT->footer();
