@@ -13,18 +13,12 @@
     define('SCORM_REPORT_ATTEMPTS_STUDENTS_WITH_NO', 2);
 
     $id = optional_param('id', '', PARAM_INT);    // Course Module ID, or
-    $a = optional_param('a', '', PARAM_INT);     // SCORM ID
-    $b = optional_param('b', '', PARAM_INT);     // SCO ID
-    $user = optional_param('user', '', PARAM_INT);  // User ID
     $attempt = optional_param('attempt', '1', PARAM_INT);  // attempt number
     $action     = optional_param('action', '', PARAM_ALPHA);
     $attemptids = optional_param('attemptid', array(), PARAM_RAW);
     $download = optional_param('download', '', PARAM_RAW);
 
     $url = new moodle_url('/mod/scorm/report.php');
-    if ($user !== '') {
-        $url->param('user', $user);
-    }
     if ($attempt !== '1') {
         $url->param('attempt', $attempt);
     }
@@ -43,26 +37,6 @@
         if (! $scorm = $DB->get_record('scorm', array('id'=>$cm->instance))) {
             print_error('invalidcoursemodule');
         }
-    } else {
-        if (!empty($b)) {
-            $url->param('b', $b);
-            if (! $sco = $DB->get_record('scorm_scoes', array('id'=>$b))) {
-                print_error('invalidactivity', 'scorm');
-            }
-            $a = $sco->scorm;
-        }
-        if (!empty($a)) {
-            $url->param('a', $a);
-            if (! $scorm = $DB->get_record('scorm', array('id'=>$a))) {
-                print_error('invalidcoursemodule');
-            }
-            if (! $course = $DB->get_record('course', array('id'=>$scorm->course))) {
-                print_error('coursemisconf');
-            }
-            if (! $cm = get_coursemodule_from_instance('scorm', $scorm->id, $course->id)) {
-                print_error('invalidcoursemodule');
-            }
-        }
     }
     $PAGE->set_url($url);
 
@@ -73,12 +47,7 @@
     require_capability('mod/scorm:viewreport', $contextmodule);
 
     add_to_log($course->id, 'scorm', 'report', 'report.php?id='.$cm->id, $scorm->id, $cm->id);
-
-    if (!empty($user)) {
-        $userdata = scorm_get_user_data($user);
-    } else {
-        $userdata = null;
-    }
+    $userdata = null;
     if (!empty($download)) {
         $noheader = true;
     }
@@ -95,14 +64,6 @@
         $PAGE->set_heading($course->fullname);
         $PAGE->navbar->add($strreport, new moodle_url('/mod/scorm/report.php', array('id'=>$cm->id)));
 
-        if (empty($b)) {
-            if (!empty($a)) {
-                $PAGE->navbar->add("$strattempt $attempt - ".fullname($userdata));
-            }
-        } else {
-            $PAGE->navbar->add("$strattempt $attempt - ".fullname($userdata), new moodle_url('/mod/scorm/report.php', array('a'=>$a, 'user'=>$user, 'attempt'=>$attempt)));
-            $PAGE->navbar->add($sco->title);
-        }
         echo $OUTPUT->header();
         $currenttab = 'reports';
         require($CFG->dirroot . '/mod/scorm/tabs.php');

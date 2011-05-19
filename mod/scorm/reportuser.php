@@ -74,28 +74,26 @@ if (!empty($user)) {
 // END of checking login +logging +getting context
 
 // Print the page header
-if (empty($noheader)) {
-    $strscorms = get_string('modulenameplural', 'scorm');
-    $strscorm = get_string('modulename', 'scorm');
-    $strreport = get_string('report', 'scorm');
-    $strattempt = get_string('attempt', 'scorm');
-    $strname = get_string('name');
+$strscorms = get_string('modulenameplural', 'scorm');
+$strscorm = get_string('modulename', 'scorm');
+$strreport = get_string('report', 'scorm');
+$strattempt = get_string('attempt', 'scorm');
+$strname = get_string('name');
 
-    $PAGE->set_title("$course->shortname: ".format_string($scorm->name));
-    $PAGE->set_heading($course->fullname);
-    $PAGE->navbar->add($strreport, new moodle_url('/mod/scorm/report.php', array('id'=>$cm->id)));
+$PAGE->set_title("$course->shortname: ".format_string($scorm->name));
+$PAGE->set_heading($course->fullname);
+$PAGE->navbar->add($strreport, new moodle_url('/mod/scorm/report.php', array('id'=>$cm->id)));
 
-    if (empty($b)) {
-        if (!empty($a)) {
-            $PAGE->navbar->add("$strattempt $attempt - ".fullname($userdata));
-        }
-    } else {
-        $PAGE->navbar->add("$strattempt $attempt - ".fullname($userdata), new moodle_url('/mod/scorm/reportuser.php', array('a'=>$a, 'user'=>$user, 'attempt'=>$attempt)));
-        $PAGE->navbar->add($sco->title);
+if (empty($b)) {
+    if (!empty($a)) {
+        $PAGE->navbar->add("$strattempt $attempt - ".fullname($userdata));
     }
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(format_string($scorm->name));
+} else {
+    $PAGE->navbar->add("$strattempt $attempt - ".fullname($userdata), new moodle_url('/mod/scorm/reportuser.php', array('a'=>$a, 'user'=>$user, 'attempt'=>$attempt)));
+    $PAGE->navbar->add($sco->title);
 }
+echo $OUTPUT->header();
+echo $OUTPUT->heading(format_string($scorm->name));
 // End of Print the page header
 
 //Capabality Check + Can be moded to add ability for sudends to check there own attempts
@@ -348,10 +346,10 @@ if(!empty($b))
                 echo '<h3>'.get_string('othertracks', 'scorm').'</h3>';
                 echo html_writer::table($table);
             }
-            echo $OUTPUT->box_end();
-        } else {
-            print_error('missingparameter');
-        }
+    echo $OUTPUT->box_end();
+    } else {
+        print_error('missingparameter');
+    }
 // Print footer
 
 echo $OUTPUT->footer();
