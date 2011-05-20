@@ -7,10 +7,11 @@ require_once($CFG->libdir.'/tablelib.php');
 require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 require_once($CFG->libdir.'/formslib.php');
 
+$user = required_param('user', '', PARAM_INT); // User ID
+
 $id = optional_param('id', '', PARAM_INT); // Course Module ID, or
 $a = optional_param('a', '', PARAM_INT); // SCORM ID
 $b = optional_param('b', '', PARAM_INT); // SCO ID
-$user = optional_param('user', '', PARAM_INT); // User ID
 $attempt = optional_param('attempt', '1', PARAM_INT); // attempt number
 $action = optional_param('action', '', PARAM_ALPHA);
 $attemptids = optional_param('attemptid', array(), PARAM_RAW);
