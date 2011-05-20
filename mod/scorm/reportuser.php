@@ -83,10 +83,10 @@ echo $OUTPUT->heading(format_string($scorm->name));
 // End of Print the page header
 
 //Parameter Checking
-if(empty($user)) {
+if (empty($user)) {
     print_error('invaliduser');
 }
-if(!empty($b) && empty ($userdata)) {
+if (!empty($b) && empty ($userdata)) {
     print_error('missingparameter');
 }
 //Capabality Check + Can be moded to add ability for sudends to check there own attempts
@@ -149,7 +149,7 @@ if (!empty($user)) {
         }
     }
 }
-if(!empty($b)) {
+if (!empty($b)) {
     if (!empty ($userdata)) {
         echo $OUTPUT->box_start('generalbox boxaligncenter');
         //print_heading(format_string($sco->title));

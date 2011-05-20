@@ -28,15 +28,9 @@
 
     if (!empty($id)) {
         $url->param('id', $id);
-        if (! $cm = get_coursemodule_from_id('scorm', $id)) {
-            print_error('invalidcoursemodule');
-        }
-        if (! $course = $DB->get_record('course', array('id'=>$cm->course))) {
-            print_error('coursemisconf');
-        }
-        if (! $scorm = $DB->get_record('scorm', array('id'=>$cm->instance))) {
-            print_error('invalidcoursemodule');
-        }
+        $cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
+        $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+        $scorm = $DB->get_record('scorm', array('id'=>$cm->instance), '*', MUST_EXIST);
     }
     $PAGE->set_url($url);
 
@@ -77,8 +71,7 @@
         }
     }
 
-    if (empty($b)) {
-        if (empty($a)) {
+
             // No options, show the global scorm report
                 $pageoptions = array();
                 $pageoptions['id'] = $cm->id;
@@ -556,8 +549,6 @@
             } else {
                 echo $OUTPUT->notification(get_string('noactivity', 'scorm'));
             }
-        }
-    }
 
     if (empty($noheader)) {
         echo $OUTPUT->footer();
