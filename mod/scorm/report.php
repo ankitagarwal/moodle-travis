@@ -19,19 +19,16 @@ $attemptids = optional_param('attemptid', array(), PARAM_RAW);
 $download = optional_param('download', '', PARAM_RAW);
 
 $url = new moodle_url('/mod/scorm/report.php');
-if ($attempt !== '1') {
-    $url->param('attempt', $attempt);
-}
+
 if ($action !== '') {
     $url->param('action', $action);
 }
 
-if (!empty($id)) {
-    $url->param('id', $id);
-    $cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
-    $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
-    $scorm = $DB->get_record('scorm', array('id'=>$cm->instance), '*', MUST_EXIST);
-}
+$url->param('id', $id);
+$cm = get_coursemodule_from_id('scorm', $id, 0, false, MUST_EXIST);
+$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+$scorm = $DB->get_record('scorm', array('id'=>$cm->instance), '*', MUST_EXIST);
+    
 $PAGE->set_url($url);
 
 require_login($course->id, false, $cm);

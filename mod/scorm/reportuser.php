@@ -3,9 +3,7 @@
 // Includes and parameters from old scorm report file
 
 require_once("../../config.php");
-require_once($CFG->libdir.'/tablelib.php');
 require_once($CFG->dirroot.'/mod/scorm/locallib.php');
-require_once($CFG->libdir.'/formslib.php');
 
 $user = required_param('user', PARAM_INT); // User ID
 
@@ -144,9 +142,6 @@ if (!empty($b)) {
     //print_heading(format_string($sco->title));
     echo $OUTPUT->heading('<a href="'.$CFG->wwwroot.'/mod/scorm/player.php?a='.$scorm->id.'&amp;mode=browse&amp;scoid='.$sco->id.'" target="_new">'.format_string($sco->title).'</a>');
     echo '<div class="mdl-align">'."\n";
-    echo $OUTPUT->user_picture($userdata, array('courseid'=>$course->id));
-    echo "<a href=\"$CFG->wwwroot/user/view.php?id=$user&amp;course=$course->id\">".
-             "$userdata->firstname $userdata->lastname</a><br />";
     $scoreview = '';
     if ($trackdata = scorm_get_tracks($sco->id, $user, $attempt)) {
         if ($trackdata->score_raw != '') {
