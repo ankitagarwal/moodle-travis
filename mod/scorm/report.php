@@ -12,8 +12,8 @@ define('SCORM_REPORT_ATTEMPTS_ALL_STUDENTS', 0);
 define('SCORM_REPORT_ATTEMPTS_STUDENTS_WITH', 1);
 define('SCORM_REPORT_ATTEMPTS_STUDENTS_WITH_NO', 2);
 
-$id = optional_param('id', '', PARAM_INT);// Course Module ID, or
-$attempt = optional_param('attempt', '1', PARAM_INT);  // attempt number
+$id = required_param('id', PARAM_INT);// Course Module ID, or
+
 $action = optional_param('action', '', PARAM_ALPHA);
 $attemptids = optional_param('attemptid', array(), PARAM_RAW);
 $download = optional_param('download', '', PARAM_RAW);
@@ -33,7 +33,7 @@ $PAGE->set_url($url);
 
 require_login($course->id, false, $cm);
 
-$contextmodule = get_context_instance(CONTEXT_MODULE,$cm->id);
+$contextmodule = get_context_instance(CONTEXT_MODULE, $cm->id);
 
 require_capability('mod/scorm:viewreport', $contextmodule);
 
@@ -61,7 +61,7 @@ if (empty($noheader)) {
     echo $OUTPUT->heading(format_string($scorm->name));
 }
 
-if ($action == 'delete' && has_capability('mod/scorm:deleteresponses',$contextmodule) && confirm_sesskey()) {
+if ($action == 'delete' && has_capability('mod/scorm:deleteresponses', $contextmodule) && confirm_sesskey()) {
     if (scorm_delete_responses($attemptids, $scorm)) { //delete responses.
         add_to_log($course->id, 'scorm', 'delete attempts', 'report.php?id=' . $cm->id, implode(",", $attemptids), $cm->id);
         echo $OUTPUT->notification(get_string('scormresponsedeleted', 'scorm'), 'notifysuccess');
@@ -108,23 +108,23 @@ if ($groupmode = groups_get_activity_groupmode($cm)) {   // Groups are being use
 
 // We only want to show the checkbox to delete attempts
 // if the user has permissions and if the report mode is showing attempts.
-$candelete = has_capability('mod/scorm:deleteresponses',$contextmodule)
+$candelete = has_capability('mod/scorm:deleteresponses', $contextmodule)
         && ($attemptsmode!= SCORM_REPORT_ATTEMPTS_STUDENTS_WITH_NO);
 // select the students
 $nostudents = false;
 
 if (empty($currentgroup)) {
     // all users who can attempt scoes
-    if (!$students = get_users_by_capability($contextmodule, 'mod/scorm:savetrack','','','','','','',false)){
+    if (!$students = get_users_by_capability($contextmodule, 'mod/scorm:savetrack', '', '', '', '', '', '', false)) {
         echo $OUTPUT->notification(get_string('nostudentsyet'));
         $nostudents = true;
         $allowedlist = '';
     } else {
-        $allowedlist = join(',',array_keys($students));
+        $allowedlist = join(',', array_keys($students));
     }
 } else {
     // all users who can attempt scoes and who are in the currently selected group
-    if (!$groupstudents = get_users_by_capability($contextmodule, 'mod/scorm:savetrack','','','','',$currentgroup,'',false)){
+    if (!$groupstudents = get_users_by_capability($contextmodule, 'mod/scorm:savetrack', '', '', '', '', $currentgroup, '', false)) {
         echo $OUTPUT->notification(get_string('nostudentsingroup'));
         $nostudents = true;
         $groupstudents = array();
@@ -132,11 +132,11 @@ if (empty($currentgroup)) {
     $allowedlist = join(',', array_keys($groupstudents));
 }
 
-if( !$nostudents ) {
+if ( !$nostudents ) {
 
     // Now check if asked download of data
     if ($download) {
-        $filename = clean_filename("$course->shortname ".format_string($scorm->name,true));
+        $filename = clean_filename("$course->shortname ".format_string($scorm->name, true));
     }
 
     // Define table columns
@@ -159,12 +159,12 @@ if( !$nostudents ) {
     $columns[]= 'attempt';
     $headers[]= get_string('attempt', 'scorm');
     $columns[]= 'start';
-    $headers[]= get_string('started','scorm');
+    $headers[]= get_string('started', 'scorm');
     $columns[]= 'finish';
-    $headers[]= get_string('last','scorm');
+    $headers[]= get_string('last', 'scorm');
     $columns[]= 'score';
-    $headers[]= get_string('score','scorm');
-    if ($detailedrep && $scoes = $DB->get_records('scorm_scoes',array("scorm"=>$scorm->id),'id')) {
+    $headers[]= get_string('score', 'scorm');
+    if ($detailedrep && $scoes = $DB->get_records('scorm_scoes', array("scorm"=>$scorm->id), 'id')) {
         foreach ($scoes as $sco) {
             if ($sco->launch!='') {
                 $columns[]= 'scograde'.$sco->id;
@@ -193,7 +193,7 @@ if( !$nostudents ) {
         $table->no_sorting('start');
         $table->no_sorting('finish');
         $table->no_sorting('score');
-        if( $scoes ) {
+        if ( $scoes ) {
             foreach ($scoes as $sco) {
                 if ($sco->launch!='') {
                     $table->no_sorting('scograde'.$sco->id);
@@ -220,7 +220,7 @@ if( !$nostudents ) {
         // Sending HTTP headers
         $workbook->send($filename);
         // Creating the first worksheet
-        $sheettitle = get_string('report','scorm');
+        $sheettitle = get_string('report', 'scorm');
         $myxls =& $workbook->add_worksheet($sheettitle);
         // format types
         $format =& $workbook->add_format();
@@ -246,7 +246,7 @@ if( !$nostudents ) {
 
         $colnum = 0;
         foreach ($headers as $item) {
-            $myxls->write(0,$colnum,$item,$formatbc);
+            $myxls->write(0, $colnum, $item, $formatbc);
             $colnum++;
         }
         $rownum=1;
@@ -259,7 +259,7 @@ if( !$nostudents ) {
         // Sending HTTP headers
         $workbook->send($filename);
         // Creating the first worksheet
-        $sheettitle = get_string('report','scorm');
+        $sheettitle = get_string('report', 'scorm');
         $myxls =& $workbook->add_worksheet($sheettitle);
         // format types
         $format =& $workbook->add_format();
@@ -284,7 +284,7 @@ if( !$nostudents ) {
 
         $colnum = 0;
         foreach ($headers as $item) {
-            $myxls->write(0,$colnum,$item,$formatbc);
+            $myxls->write(0, $colnum, $item, $formatbc);
             $colnum++;
         }
         $rownum=1;
@@ -306,7 +306,7 @@ if( !$nostudents ) {
     // This part is the same for all cases - join users and scorm_scoes_track tables
     $from = 'FROM {user} u ';
     $from .= 'LEFT JOIN {scorm_scoes_track} st ON st.userid = u.id AND st.scormid = '.$scorm->id;
-    switch ($attemptsmode){
+    switch ($attemptsmode) {
         case SCORM_REPORT_ATTEMPTS_STUDENTS_WITH:
             // Show only students with attempts
             $where = ' WHERE u.id IN (' .$allowedlist. ') AND st.userid IS NOT NULL';
@@ -322,7 +322,7 @@ if( !$nostudents ) {
     }
 
     $countsql = 'SELECT COUNT(DISTINCT('.$DB->sql_concat('u.id', '\'#\'', 'COALESCE(st.attempt, 0)').')) AS nbresults, ';
-    $countsql .= 'COUNT(DISTINCT('.$DB->sql_concat('u.id', '\'#\'','st.attempt').')) AS nbattempts, ';
+    $countsql .= 'COUNT(DISTINCT('.$DB->sql_concat('u.id', '\'#\'', 'st.attempt').')) AS nbattempts, ';
     $countsql .= 'COUNT(DISTINCT(u.id)) AS nbusers ';
     $countsql .= $from.$where;
     $params = array();
@@ -362,9 +362,9 @@ $countsql .= ' AND '.$twhere;
 
         echo '<div class="quizattemptcounts">';
         if ( $count->nbresults == $count->nbattempts ) {
-            echo get_string('reportcountattempts','scorm', $count);
-        } else if( $count->nbattempts>0 ) {
-            echo get_string('reportcountallattempts','scorm', $count);
+            echo get_string('reportcountattempts', 'scorm', $count);
+        } else if ( $count->nbattempts>0 ) {
+            echo get_string('reportcountallattempts', 'scorm', $count);
         } else {
             echo $count->nbusers.' '.get_string('users');
         }
@@ -373,12 +373,12 @@ $countsql .= ' AND '.$twhere;
 
     // Fetch the attempts
     if (!$download) {
-        $attempts = $DB->get_records_sql($select.$from.$where.$sort, $params,
+        $attempts = $DB->get_records_sql($select.$from.$where.$sort, $params, 
         $table->get_page_start(), $table->get_page_size());
         echo '<div id="scormtablecontainer">';
         if ($candelete) {
             // Start form
-            $strreallydel  = addslashes_js(get_string('deleteattemptcheck','scorm'));
+            $strreallydel  = addslashes_js(get_string('deleteattemptcheck', 'scorm'));
             echo '<form id="attemptsform" method="post" action="' . $reporturlwithdisplayoptions->out(true) .
     '" onsubmit="return confirm(\''.$strreallydel.'\');">';
             echo '<input type="hidden" name="action" value="delete"/>';
@@ -394,33 +394,34 @@ $countsql .= ' AND '.$twhere;
     }
 
     if ($attempts) {
-        foreach($attempts as $scouser){
+        foreach ($attempts as $scouser) {
             $row = array();
             if (!empty($scouser->attempt)) {
                 $timetracks = scorm_get_sco_runtime($scorm->id, false, $scouser->userid, $scouser->attempt);
             }
-            if (in_array('checkbox', $columns)){
+            if (in_array('checkbox', $columns)) {
                 if ($candelete && !empty($timetracks->start)) {
                     $row[] = '<input type="checkbox" name="attemptid[]" value="'. $scouser->userid . ':' . $scouser->attempt . '" />';
-                } else if($candelete) {
+                } else if ($candelete) {
                     $row[] = '';
                 }
             }
-            if (in_array('picture', $columns)){
-                $user = (object)array('id'=>$scouser->userid,
-                                      'picture'=>$scouser->picture,
-                                      'imagealt'=>$scouser->imagealt,
-                                      'email'=>$scouser->email,
-                                      'firstname'=>$scouser->firstname,
-                                      'lastname'=>$scouser->lastname);
+            if (in_array('picture', $columns)) {
+                $user = (object)array(
+                        'id'=>$scouser->userid, 
+                        'picture'=>$scouser->picture, 
+                        'imagealt'=>$scouser->imagealt, 
+                        'email'=>$scouser->email, 
+                        'firstname'=>$scouser->firstname, 
+                        'lastname'=>$scouser->lastname);
                 $row[] = $OUTPUT->user_picture($user, array('courseid'=>$course->id));
             }
-            if (!$download){
+            if (!$download) {
                 $row[] = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$scouser->userid.'&amp;course='.$course->id.'">'.fullname($scouser).'</a>';
             } else {
                 $row[] = fullname($scouser);
             }
-            if (in_array('idnumber', $columns)){
+            if (in_array('idnumber', $columns)) {
                 $row[] = $scouser->idnumber;
             }
             if (empty($timetracks->start)) {
@@ -442,7 +443,7 @@ $countsql .= ' AND '.$twhere;
             if ($scoes) {
                 foreach ($scoes as $sco) {
                     if ($sco->launch!='') {
-                        if ($trackdata = scorm_get_tracks($sco->id,$scouser->userid,$scouser->attempt)) {
+                        if ($trackdata = scorm_get_tracks($sco->id, $scouser->userid, $scouser->attempt)) {
                             if ($trackdata->status == '') {
                                 $trackdata->status = 'notattempted';
                             }
@@ -466,7 +467,7 @@ $countsql .= ' AND '.$twhere;
                             if (!$download) {
                                 $row[] = '<img src="'.$OUTPUT->pix_url($trackdata->status, 'scorm').'" alt="'.$strstatus.'" title="'.$strstatus.'" /><br/>
                                         <a href="reportuser.php?b='.$sco->id.'&amp;user='.$scouser->userid.'&amp;attempt='.$scouser->attempt.
-                                        '" title="'.get_string('details','scorm').'">'.$score.'</a>';
+                                        '" title="'.get_string('details', 'scorm').'">'.$score.'</a>';
                             } else {
                                 $row[] = $score;
                             }
@@ -487,8 +488,8 @@ $countsql .= ' AND '.$twhere;
                 $table->add_data($row);
             } else if ($download == 'Excel' or $download == 'ODS') {
                 $colnum = 0;
-                foreach($row as $item){
-                    $myxls->write($rownum,$colnum,$item,$format);
+                foreach ($row as $item) {
+                    $myxls->write($rownum, $colnum, $item, $format);
                     $colnum++;
                 }
                 $rownum++;
@@ -502,9 +503,9 @@ $countsql .= ' AND '.$twhere;
             if ($candelete) {
                 echo '<table id="commands">';
                 echo '<tr><td>';
-                echo '<a href="javascript:select_all_in(\'DIV\',null,\'scormtablecontainer\');">'.
+                echo '<a href="javascript:select_all_in(\'DIV\', null, \'scormtablecontainer\');">'.
                      get_string('selectall', 'scorm').'</a> / ';
-                echo '<a href="javascript:deselect_all_in(\'DIV\',null,\'scormtablecontainer\');">'.
+                echo '<a href="javascript:deselect_all_in(\'DIV\', null, \'scormtablecontainer\');">'.
                      get_string('selectnone', 'scorm').'</a> ';
                 echo '&nbsp;&nbsp;';
                 echo '<input type="submit" value="'.get_string('deleteselected', 'quiz_overview').'"/>';
