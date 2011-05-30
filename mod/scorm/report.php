@@ -45,11 +45,8 @@ if (!empty($download)) {
 /// Print the page header
 if (empty($noheader)) {
 
-    $strscorms = get_string('modulenameplural', 'scorm');
-    $strscorm  = get_string('modulename', 'scorm');
     $strreport  = get_string('report', 'scorm');
     $strattempt  = get_string('attempt', 'scorm');
-    $strname  = get_string('name');
 
     $PAGE->set_title("$course->shortname: ".format_string($scorm->name));
     $PAGE->set_heading($course->fullname);

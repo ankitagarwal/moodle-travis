@@ -139,7 +139,6 @@ $string['incomplete'] = 'Incomplete';
 $string['info'] = 'Info';
 $string['interactions'] = 'Interactions';
 $string['invalidactivity'] = 'Scorm activity is incorrect';
-$string['invaliduser'] = 'Invalid User Specified';
 $string['last'] = 'Last accessed on';
 $string['lastaccess'] = 'Last access';
 $string['lastattempt'] = 'Last attempt';

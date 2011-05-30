@@ -51,11 +51,9 @@ $userdata = scorm_get_user_data($user);
 // END of checking login +logging +getting context
 
 // Print the page header
-$strscorms = get_string('modulenameplural', 'scorm');
-$strscorm = get_string('modulename', 'scorm');
 $strreport = get_string('report', 'scorm');
 $strattempt = get_string('attempt', 'scorm');
-$strname = get_string('name');
+
 
 $PAGE->set_title("$course->shortname: ".format_string($scorm->name));
 $PAGE->set_heading($course->fullname);
@@ -77,7 +75,7 @@ echo $OUTPUT->heading(format_string($scorm->name));
 if (empty ($userdata)) {
     print_error('missingparameter');
 }
-require_capability('mod/scorm:viewreports', $contextmodule);
+require_capability('mod/scorm:viewreport', $contextmodule);
 
 //printing user details
 echo $OUTPUT->box_start('generalbox boxaligncenter');
