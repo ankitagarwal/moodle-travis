@@ -996,7 +996,7 @@ abstract class restore_dbops {
                                              WHERE username = ?
                                                AND mnethostid = ?
                                                AND (
-                                                       email = ?
+                                                       " . $DB->sql_like('email', '?', false) . "
                                                     OR (
                                                            firstaccess != 0
                                                        AND firstaccess = ?
