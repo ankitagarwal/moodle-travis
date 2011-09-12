@@ -427,6 +427,18 @@ M.core_filepicker.init = function(Y, options) {
 
                     var tree = Y.Node.create(html);
                     Y.one(panel_id).appendChild(tree);
+                    //If rightpanel has an anchor or input element avaliable then try put focus on it
+                    var rightpanel = Y.one('#panel-'+scope.options.client_id);
+                    if (rightpanel && ( typeof (rightpanel) != 'undefined')) {
+                        var firstelement = rightpanel.one('a');
+                        if (!firstelement || ( typeof (firstelement) == 'undefined')) {
+                            firstelement = rightpanel.one('input:not([type="hidden"]):not([type="file"])');
+                        }
+                        if (firstelement && ( typeof (firstelement) != 'undefined')) {
+                            firstelement.focus();
+                        }
+                    }
+
                     if (!list || list.length==0) {
                         return;
                     }
@@ -1110,6 +1122,17 @@ M.core_filepicker.init = function(Y, options) {
                         scope.viewbar.set('disabled', false);
                         scope.parse_repository_options(obj);
                         scope.view_files();
+                    }
+                    //If rightpanel has an anchor or input element avaliable then try put focus on it
+                    var rightpanel = Y.one('#panel-'+scope.options.client_id);
+                    if (rightpanel && ( typeof (rightpanel) != 'undefined')) {
+                        var firstelement = rightpanel.one('a');
+                        if (!firstelement || ( typeof (firstelement) == 'undefined' )) {
+                            firstelement = rightpanel.one('input:not([type="hidden"]):not([type="file"])');
+                        }
+                        if (firstelement && ( typeof (firstelement) != 'undefined')) {
+                            firstelement.focus();
+                        }
                     }
                 }
             }, true);
