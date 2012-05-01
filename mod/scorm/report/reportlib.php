@@ -79,4 +79,30 @@ function get_scorm_question_count($scormid) {
     $rs->close(); // closing recordset
     return $count;
 }
-
+/**
+ * Returns The maximum numbers of Questions associated with a particular sco
+ *
+ * @param int Sco ID
+ * @return int an integer representing the question count
+ */
+function get_sco_question_count($scoid) {
+    global $DB;
+    $count = 0;
+    $params = array();
+    $select = "scoid = ? AND ";
+    $select .= $DB->sql_like("element", "?", false);
+    $params[] = $scoid;
+    $params[] = "cmi.interactions_%.id";
+    $rs = $DB->get_recordset_select("scorm_scoes_track", $select, $params, 'element');
+    $keywords = array("cmi.interactions_", ".id");
+    foreach ($rs as $record) {
+        $num = trim(str_ireplace($keywords, '', $record->element));
+        if (is_numeric($num) && $num > $count) {
+            $count = $num;
+        }
+    }
+    //done as interactions start at 0
+    $count++;
+    $rs->close(); // closing recordset
+    return $count;
+}
