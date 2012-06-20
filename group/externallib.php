@@ -1115,6 +1115,155 @@ class core_group_external extends external_api {
         return null;
     }
 
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.3.1
+     */
+    public static function assign_module_grouping_parameters() {
+        return new external_function_parameters(
+            array(
+                'assignments'=> new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'groupingid' => new external_value(PARAM_INT, 'grouping record id'),
+                            'cmid' => new external_value(PARAM_INT, 'course module id'),
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /**
+     * Assign a grouping to a module
+     *
+     * @param array $assignments of arrays with keys groupingid, cmid
+     * @return void
+     * @since Moodle 2.3.1
+     */
+    public static function assign_module_grouping($assignments) {
+        global $CFG, $DB;
+        require_once("$CFG->dirroot/group/lib.php");
+
+        $params = self::validate_parameters(self::assign_module_grouping_parameters(), array('assignments'=>$assignments));
+
+        $transaction = $DB->start_delegated_transaction();
+        foreach ($params['assignments'] as $assignment) {
+            // Validate params.
+            $groupingid = $assignment['groupingid'];
+            $cmid = $assignment['cmid'];
+
+            // Get the course module.
+            if (!$cm = get_coursemodule_from_id('', $cmid)) {
+                throw new invalid_parameter_exception("Invalid course module id ($cmid)");
+            }
+
+            // Check if the grouping exists in the course. Only check this if the grouping is > 0.
+            if ($groupingid and !$currentgrouping = $DB->get_record('groupings', array('id' => $groupingid, 'courseid' => $cm->course))) {
+                throw new invalid_parameter_exception("Grouping $grouping->id does not exist in the course $cm->course");
+            }
+
+            // Now security checks.
+            $context = context_course::instance($cm->course);
+            try {
+                self::validate_context($context);
+            } catch (Exception $e) {
+                $exceptionparam = new stdClass();
+                $exceptionparam->message = $e->getMessage();
+                $exceptionparam->courseid = $cm->course;
+                throw new moodle_exception('errorcoursecontextnotvalid' , 'webservice', '', $exceptionparam);
+            }
+            require_capability('moodle/course:manageactivities', $context);
+            require_capability('moodle/course:managegroups', $context);
+
+            // Check if the plugin supports groupings (FEATURE_GROUPINGS).
+            require_once($CFG->dirroot . "/mod/$cm->modname/lib.php");
+            $functioncheck = $cm->modname . "_supports";
+            if (!function_exists($functioncheck) or !$functioncheck(FEATURE_GROUPINGS)) {
+                throw new moodle_exception("Module $cm->modname doesn't support groupings.");
+            }
+
+            if ($cm->groupingid != $groupingid) {
+                $DB->set_field('course_modules', 'groupingid', $groupingid, array('id'=>$cmid));
+            }
+        }
+
+        $transaction->allow_commit();
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return null
+     * @since Moodle 2.3.1
+     */
+    public static function assign_module_grouping_returns() {
+        return null;
+    }
+
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters
+     * @since Moodle 2.3.1
+     */
+    public static function unassign_module_grouping_parameters() {
+        return new external_function_parameters(
+            array(
+                'assignments'=> new external_multiple_structure(
+                    new external_single_structure(
+                        array(
+                            'groupingid' => new external_value(PARAM_INT, 'grouping record id'),
+                            'cmid' => new external_value(PARAM_INT, 'course module id'),
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /**
+     * Unassign a grouping to a module. This is a wrapper function for assign_module_grouping
+     *
+     * @param array $assignments of arrays with keys groupingid, cmid
+     * @return void
+     * @since Moodle 2.3.1
+     */
+    public static function unassign_module_grouping($assignments) {
+        global $CFG, $DB;
+        require_once("$CFG->dirroot/group/lib.php");
+
+        $params = self::validate_parameters(self::unassign_module_grouping_parameters(), array('assignments'=>$assignments));
+
+        foreach ($params['assignments'] as $key => $assignment) {
+            // Get the course module.
+            if (!$cm = get_coursemodule_from_id('', $assignment['cmid'])) {
+                throw new invalid_parameter_exception("Invalid course module id ($cmid)");
+            }
+
+            // Now we check if the current groupingid assigned is the same that we want unassign.
+            if ($cm->groupingid != $assignment['groupingid']) {
+                throw new moodle_exception("The course module (id $cm->id) has assigned a different grouping that the one you are trying to unassing.");
+            }
+
+            // The groupingid seems to be valid, change it for unassign.
+            $params['assignments'][$key]['groupingid'] = 0;
+        }
+        self::assign_module_grouping($params['assignments']);
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return null
+     * @since Moodle 2.3.1
+     */
+    public static function unassign_module_grouping_returns() {
+        return null;
+    }
+
 }
 
 /**

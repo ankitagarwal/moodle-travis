@@ -219,6 +219,22 @@ $functions = array(
         'type'        => 'write',
     ),
 
+    'core_group_assign_module_grouping' => array(
+        'classname'   => 'core_group_external',
+        'methodname'  => 'assign_module_grouping',
+        'classpath'   => 'group/externallib.php',
+        'description' => 'Assing groupings to modules',
+        'type'        => 'write',
+    ),
+
+    'core_group_unassign_module_grouping' => array(
+        'classname'   => 'core_group_external',
+        'methodname'  => 'unassign_module_grouping',
+        'classpath'   => 'group/externallib.php',
+        'description' => 'Unassing groupings from modules',
+        'type'        => 'write',
+    ),
+
     // === file related functions ===
 
     'moodle_file_get_files' => array(
