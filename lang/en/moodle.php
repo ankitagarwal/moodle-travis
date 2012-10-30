@@ -1480,6 +1480,7 @@ $string['separateandconnectedinfo'] = 'The scale based on the theory of separate
 $string['serverlocaltime'] = 'Server\'s local time';
 $string['setcategorytheme'] = 'Set category theme';
 $string['settings'] = 'Settings';
+$string['settingstoocomplex'] = 'The course group mode and forcemode settings for this course, is preventing you from viewing this report. Please force the group mode, to ensure you can view this report.';
 $string['shortname'] = 'Short name'; // @deprecated MDL-34652 - use shortnamecourse or shortnameuser or some own context specific string
 $string['shortnamecollisionwarning'] = '[*] = This shortname is already in use by a course and will need to be changed upon approval';
 $string['shortnamecourse'] = 'Course short name';

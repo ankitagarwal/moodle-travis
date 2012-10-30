@@ -65,6 +65,14 @@ require_capability('report/participation:view', $context);
 
 add_to_log($course->id, "course", "report participation", "report/participation/index.php?id=$course->id", $course->id);
 
+// Check to see if groups are being used in this course.
+// and if so, set $currentgroup to reflect the current group.
+
+$groupmode    = groups_get_course_groupmode($course);   // Groups are being used.
+$currentgroup = groups_get_course_group($course, true);
+
+$isseparategroups = ($course->groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $context));
+
 $strparticipation = get_string('participationreport');
 $strviews         = get_string('views');
 $strposts         = get_string('posts');
@@ -83,6 +91,20 @@ if (!array_key_exists($action, $actionoptions)) {
 $PAGE->set_title($course->shortname .': '. $strparticipation);
 $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
+
+if ($isseparategroups and (!$currentgroup) ) {
+    // The user is not in the group so show message and exit
+    echo $OUTPUT->heading(get_string("notingroup"));
+    echo $OUTPUT->footer();
+    exit;
+}
+
+if (($course->groupmode == VISIBLEGROUPS || $course->groupmode == NOGROUPS) &&  $course->groupmodeforce == 0
+        && !has_capability('moodle/site:accessallgroups', $context)) {
+    // Things are too complicated, we can't decide what to show and what not. So better show nothing.
+    // Refer MDL-21415.
+    print_error('badgroupsetting', 'error', new moodle_url('/course/view.php', array('id' => $PAGE->course->id)));
+}
 
 $modinfo = get_fast_modinfo($course);
 
@@ -166,6 +188,7 @@ echo '<input type="submit" value="'.get_string('go').'" />'."\n</div></form>\n";
 
 $baseurl =  $CFG->wwwroot.'/report/participation/index.php?id='.$course->id.'&amp;roleid='
     .$roleid.'&amp;instanceid='.$instanceid.'&amp;timefrom='.$timefrom.'&amp;action='.$action.'&amp;perpage='.$perpage;
+groups_print_course_menu($course, $baseurl);
 
 if (!empty($instanceid) && !empty($roleid)) {
     // from here assume we have at least the module we're using.
@@ -224,9 +247,16 @@ if (!empty($instanceid) && !empty($roleid)) {
 
     $relatedcontexts = get_related_contexts_string($context);
 
+    $groupsql = "";
+    if (!empty($currentgroup)) {
+        $groupsql = "JOIN {groups_members} gm ON (gm.userid = u.id AND gm.groupid = :groupid)";
+        $params['groupid'] = $currentgroup;
+    }
+
     $sql = "SELECT ra.userid, u.firstname, u.lastname, u.idnumber, l.actioncount AS count
             FROM (SELECT * FROM {role_assignments} WHERE contextid $relatedcontexts AND roleid = :roleid ) ra
             JOIN {user} u ON u.id = ra.userid
+            $groupsql
             LEFT JOIN (
                 SELECT userid, COUNT(action) AS actioncount FROM {log} WHERE cmid = :instanceid AND time > :timefrom AND $actionsql GROUP BY userid
             ) l ON (l.userid = ra.userid)";
@@ -247,6 +277,7 @@ if (!empty($instanceid) && !empty($roleid)) {
     $countsql = "SELECT COUNT(DISTINCT(ra.userid))
                    FROM {role_assignments} ra
                    JOIN {user} u ON u.id = ra.userid
+                   $groupsql
                   WHERE ra.contextid $relatedcontexts AND ra.roleid = :roleid";
 
     $totalcount = $DB->count_records_sql($countsql, $params);
