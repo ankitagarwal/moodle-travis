@@ -1028,6 +1028,97 @@ class moodlelib_testcase extends advanced_testcase {
         $USER = $olduser;
     }
 
+    function test_validate_username() {
+        global $CFG;
+
+        $currentstatus =  $CFG->extendedusernamechars;
+        $CFG->extendedusernamechars = false;
+
+        $username = "";
+        $result = validate_username($username);
+        $this->assertFalse($result);
+
+        $username = "serioussam";
+        $user = $this->getDataGenerator()->create_user(array('username' => $username));
+        $result = validate_username($username);
+        $this->assertFalse($result);
+        delete_user($user);
+
+        $username = "Serious_sam";
+        $result = validate_username($username);
+        $this->assertFalse($result);
+
+        $username = "seri.ous_s@m";
+        $result = validate_username($username);
+        $this->assertTrue($result);
+
+        $username = "serioussam1256";
+        $result = validate_username($username);
+        $this->assertTrue($result);
+
+        $username = "serious s;'am";
+        $result = validate_username($username);
+        $this->assertFalse($result);
+
+        $username = "serious#s;'am";
+        $CFG->extendedusernamechars = true;
+        $result = validate_username($username);
+        $this->assertTrue($result);
+
+        // Testing exception mode
+        $CFG->extendedusernamechars = false;
+
+        $username = "";
+        try {
+            $result = validate_username($username, true);
+            $this->fail('Exception expected');
+        } catch (Exception $e) {
+            $this->assertInstanceOf('moodle_exception', $e);
+        }
+
+        $username = "serioussam";
+        $user = $this->getDataGenerator()->create_user(array('username' => $username));
+        try {
+            $result = validate_username($username, true);
+            $this->fail('Exception expected');
+        } catch (Exception $e) {
+            $this->assertInstanceOf('moodle_exception', $e);
+        }
+        delete_user($user);
+
+        $username = "Serious_sam";
+        try {
+            $result = validate_username($username, true);
+            $this->fail('Exception expected');
+        } catch (Exception $e) {
+            $this->assertInstanceOf('moodle_exception', $e);
+        }
+
+        $username = "seri.ous_s@m";
+        $result = validate_username($username, true);
+        $this->assertTrue($result);
+
+        $username = "serioussam1256";
+        $result = validate_username($username, true);
+        $this->assertTrue($result);
+
+        $username = "serious s;'am";
+        try {
+            $result = validate_username($username, true);
+            $this->fail('Exception expected');
+        } catch (Exception $e) {
+            $this->assertInstanceOf('moodle_exception', $e);
+        }
+
+        $username = "serious#s;'am";
+        $CFG->extendedusernamechars = true;
+        $result = validate_username($username, true);
+        $this->assertTrue($result);
+
+        $CFG->extendedusernamechars = $currentstatus;
+        $this->resetAfterTest(true);          // reset all changes automatically after this test.
+    }
+
     public function test_normalize_component() {
 
         // moodle core
