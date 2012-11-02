@@ -87,6 +87,7 @@ if ($rev > -1) {
     $cacheimage = false;
     if ($usesvg && file_exists("$candidatelocation/$image.svg")) {
         $cacheimage = "$candidatelocation/$image.svg";
+        unlink($cacheimage);
         $ext = 'svg';
     } else if (file_exists("$candidatelocation/$image.png")) {
         $cacheimage = "$candidatelocation/$image.png";
@@ -160,7 +161,6 @@ if (!$usesvg && $rev > -1) {
         }
     }
 }
-
 // Either SVG was requested or we've cached a SVG version and are ready to serve a regular format.
 $imagefile = $theme->resolve_image_location($image, $component, $usesvg);
 if (empty($imagefile) or !is_readable($imagefile)) {
@@ -276,6 +276,7 @@ function get_contenttype_from_ext($ext) {
  */
 function cache_image($image, $imagefile, $candidatelocation) {
     global $CFG;
+    $var = "ff0000";
     $pathinfo = pathinfo($imagefile);
     $cacheimage = "$candidatelocation/$image.".$pathinfo['extension'];
 
@@ -283,14 +284,24 @@ function cache_image($image, $imagefile, $candidatelocation) {
     if (!file_exists(dirname($cacheimage))) {
         @mkdir(dirname($cacheimage), $CFG->directorypermissions, true);
     }
-
     // Prevent serving of incomplete file from concurrent request,
     // the rename() should be more atomic than copy().
     ignore_user_abort(true);
-    if (@copy($imagefile, $cacheimage.'.tmp')) {
+
+    if ($pathinfo['extension'] == 'svg') {
+        $imagecont = preg_replace('/fill:#([1-9]*)/si', "fill:#$var", file_get_contents($imagefile));
+    }
+    if (!empty($imagecont)) {
+        file_put_contents($cacheimage. '.tmp', $imagecont);
         rename($cacheimage.'.tmp', $cacheimage);
         @chmod($cacheimage, $CFG->filepermissions);
         @unlink($cacheimage.'.tmp'); // just in case anything fails
+    } else {
+        if (@copy($imagefile, $cacheimage.'.tmp')) {
+            rename($cacheimage.'.tmp', $cacheimage);
+            @chmod($cacheimage, $CFG->filepermissions);
+            @unlink($cacheimage.'.tmp'); // just in case anything fails
+        }
     }
     return $cacheimage;
 }
