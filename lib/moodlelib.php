@@ -3873,6 +3873,50 @@ function create_user_record($username, $password, $auth = 'manual') {
 }
 
 /**
+ * Validates a username based on Moodle standards.
+ *
+ * @since 2.4
+ * @param string $username New user's username to be validated.
+ * @param bool $throwexp Throw exception for invalid username?
+ * @return bool true if the username is valid else false.
+ */
+function validate_username($username, $throwexp = false) {
+    global $CFG, $DB;
+
+    $return = true;
+    if (empty($username)) {
+        // Might be only whitespace.
+        $return = false;
+        if ($throwexp) {
+            throw new moodle_exception('required');
+        }
+    } else {
+        // Check new username does not exist.
+        if ($DB->record_exists('user', array('username' => $username, 'mnethostid' => $CFG->mnet_localhost_id))) {
+            $return = false;
+            if ($throwexp) {
+                throw new moodle_exception('usernameexists');
+            }
+        }
+        // Check allowed characters
+        if ($username !== textlib::strtolower($username)) {
+            $return = false;
+            if ($throwexp) {
+                throw new moodle_exception('usernamelowercase');
+            }
+        } else {
+            if ($username !== clean_param($username, PARAM_USERNAME)) {
+                $return = false;
+                if ($throwexp) {
+                    throw new moodle_exception('invalidusername');
+                }
+            }
+        }
+    }
+    return $return;
+}
+
+/**
  * Will update a local user record from an external source.
  * (MNET users can not be updated using this method!)
  *
