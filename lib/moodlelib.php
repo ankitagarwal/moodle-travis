@@ -3913,6 +3913,21 @@ function validate_username($username, $throwexp = false) {
             }
         }
     }
+
+    // Check for user in all auth plugins.
+    $authplugins = get_enabled_auth_plugins();
+    foreach ($authplugins as $authplugin) {
+        $inst = get_auth_plugin($authplugin);
+        $count = $inst->user_exists($username);
+        if ($count > 0) {
+            $return = false;
+            if ($throwexp) {
+                throw new moodle_exception('usernameexists');
+            }
+            break;
+        }
+    }
+
     return $return;
 }
 
