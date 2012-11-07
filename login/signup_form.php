@@ -125,18 +125,10 @@ class login_signup_form extends moodleform {
 
         $authplugin = get_auth_plugin($CFG->registerauth);
 
-        if ($DB->record_exists('user', array('username'=>$data['username'], 'mnethostid'=>$CFG->mnet_localhost_id))) {
-            $errors['username'] = get_string('usernameexists');
-        } else {
-            //check allowed characters
-            if ($data['username'] !== textlib::strtolower($data['username'])) {
-                $errors['username'] = get_string('usernamelowercase');
-            } else {
-                if ($data['username'] !== clean_param($data['username'], PARAM_USERNAME)) {
-                    $errors['username'] = get_string('invalidusername');
-                }
-
-            }
+        try {
+            validate_username($username->usernew);
+        } catch (Exception $e) {
+            $err['username'] = $e->getMessage();
         }
 
         //check if user exists in external db

@@ -175,22 +175,10 @@ class user_editadvanced_form extends moodleform {
             }
         }
 
-        if (empty($usernew->username)) {
-            //might be only whitespace
-            $err['username'] = get_string('required');
-        } else if (!$user or $user->username !== $usernew->username) {
-            //check new username does not exist
-            if ($DB->record_exists('user', array('username'=>$usernew->username, 'mnethostid'=>$CFG->mnet_localhost_id))) {
-                $err['username'] = get_string('usernameexists');
-            }
-            //check allowed characters
-            if ($usernew->username !== textlib::strtolower($usernew->username)) {
-                $err['username'] = get_string('usernamelowercase');
-            } else {
-                if ($usernew->username !== clean_param($usernew->username, PARAM_USERNAME)) {
-                    $err['username'] = get_string('invalidusername');
-                }
-            }
+        try {
+            validate_username($username->usernew);
+        } catch (Exception $e) {
+            $err['username'] = $e->getMessage();
         }
 
         if (!$user or $user->email !== $usernew->email) {
