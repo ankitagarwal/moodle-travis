@@ -123,20 +123,11 @@ class login_signup_form extends moodleform {
         global $CFG, $DB;
         $errors = parent::validation($data, $files);
 
-        $authplugin = get_auth_plugin($CFG->registerauth);
-
         try {
             validate_username($username->usernew);
         } catch (Exception $e) {
             $err['username'] = $e->getMessage();
         }
-
-        //check if user exists in external db
-        //TODO: maybe we should check all enabled plugins instead
-        if ($authplugin->user_exists($data['username'])) {
-            $errors['username'] = get_string('usernameexists');
-        }
-
 
         if (! validate_email($data['email'])) {
             $errors['email'] = get_string('invalidemail');
