@@ -174,9 +174,8 @@ class user_editadvanced_form extends moodleform {
                 $err['newpassword'] = $errmsg;
             }
         }
-
         try {
-            validate_username($username->usernew);
+            validate_username($usernew->username, true);
         } catch (Exception $e) {
             $err['username'] = $e->getMessage();
         }
