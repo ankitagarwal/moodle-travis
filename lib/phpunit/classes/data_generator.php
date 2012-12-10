@@ -601,4 +601,60 @@ EOD;
 
         return true;
     }
+
+    /** Create calendar events or update them
+     * Set $prop->id, if you want to do an update instead of creating an new event
+     *
+     * @param string $name        Event title
+     * @param int    $userid      User id
+     * @param string $type        Event type
+     * @param int    $repeats     Number of repeated events to create
+     * @param int    $timestart   Time stamp of the event start
+     * @param mixed  $prop        List of event properties as array or object
+     * @return mixed              Event object or false;
+     * @since Moodle 2.5
+     */
+
+    public function create_calendar_event($name, $userid = 0, $type = 'user', $repeats = 0, $timestart  = null, $prop = null) {
+        global $CFG, $DB, $USER, $SITE;
+
+        require_once("$CFG->dirroot/calendar/lib.php");
+        if (!empty($prop)) {
+           if (is_array($prop)) {
+               $prop = (object)$prop;
+           }
+        } else {
+            $prop = new stdClass();
+        }
+        $prop->name = $name;
+        if (empty($prop->eventtype)) {
+            $prop->eventtype = $type;
+        }
+        if (empty($prop->repeats)) {
+            $prop->repeats = $repeats;
+        }
+        if (empty($prop->timestart)) {
+            $prop->timestart = time();
+        }
+        if (empty($prop->timeduration)) {
+            $prop->timeduration = 0;
+        }
+        if (empty($prop->repeats)) {
+            $prop->repeat = 0;
+        } else {
+            $prop->repeat = 1;
+        }
+        if (empty($prop->userid)) {
+           if (!empty($userid)) {
+                $prop->userid = $userid;
+           } else {
+               return false;
+           }
+        }
+        if (empty($prop->courseid)) {
+            $prop->courseid = $SITE->id;
+        }
+        $event = new calendar_event($prop);
+        return $event->create($prop);
+    }
 }
