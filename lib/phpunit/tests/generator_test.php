@@ -203,4 +203,33 @@ class core_phpunit_generator_testcase extends advanced_testcase {
         $this->assertFalse($result);
 
     }
+
+    public function test_create_calendar_events () {
+        global $DB, $USER;
+
+        $this->setAdminUser();
+        $this->resetAfterTest();
+        $prevcount = count($DB->get_records("event"));
+
+        // Create a few events and do asserts.
+        $this->getDataGenerator()->create_calendar_event('test', $USER->id);
+        $count = count($DB->get_records("event", array('name' => 'test')));
+        $this->assertEquals(1, $count);
+        $aftercount = count($DB->get_records("event"));
+        $this->assertEquals($prevcount + 1, $aftercount);
+
+        $this->getDataGenerator()->create_calendar_event('user', $USER->id, 'user', 3);
+        $count = count($DB->get_records("event", array('name' => 'user')));
+        $this->assertEquals(3, $count);
+        $aftercount = count($DB->get_records("event"));
+        $this->assertEquals($prevcount + 4, $aftercount);
+
+        $this->setExpectedException('PHPUnit_Framework_Error_Warning');
+        $this->getDataGenerator()->create_calendar_event();
+        $aftercount = count($DB->get_records("event"));
+        $this->assertEquals($prevcount + 4, $aftercount);
+
+
+
+    }
 }
