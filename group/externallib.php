@@ -1157,12 +1157,12 @@ class core_group_external extends external_api {
 
             // Get the course module.
             if (!$cm = get_coursemodule_from_id('', $cmid)) {
-                throw new invalid_parameter_exception("Invalid course module id ($cmid)");
+                throw new moodle_exception('invalidcoursemodule');
             }
 
             // Check if the grouping exists in the course. Only check this if the grouping is > 0.
             if ($groupingid and !$currentgrouping = $DB->get_record('groupings', array('id' => $groupingid, 'courseid' => $cm->course))) {
-                throw new invalid_parameter_exception("Grouping $grouping->id does not exist in the course $cm->course");
+                throw new moodle_exception('invalidgroupingid');
             }
 
             // Now security checks.
@@ -1182,7 +1182,7 @@ class core_group_external extends external_api {
             require_once($CFG->dirroot . "/mod/$cm->modname/lib.php");
             $functioncheck = $cm->modname . "_supports";
             if (!function_exists($functioncheck) or !$functioncheck(FEATURE_GROUPINGS)) {
-                throw new moodle_exception("Module $cm->modname doesn't support groupings.");
+                throw new moodle_exception('nogroupingsupport', 'error', '', $cm->modname);
             }
 
             if ($cm->groupingid != $groupingid) {
@@ -1240,12 +1240,12 @@ class core_group_external extends external_api {
         foreach ($params['assignments'] as $key => $assignment) {
             // Get the course module.
             if (!$cm = get_coursemodule_from_id('', $assignment['cmid'])) {
-                throw new invalid_parameter_exception("Invalid course module id ($cmid)");
+                throw new moodle_exception('invalidcoursemodule');
             }
 
             // Now we check if the current groupingid assigned is the same that we want unassign.
             if ($cm->groupingid != $assignment['groupingid']) {
-                throw new moodle_exception("The course module (id $cm->id) has assigned a different grouping that the one you are trying to unassing.");
+                throw new moodle_exception('invalidgroupingid', 'error', '', '', "The course module (id $cm->id) has assigned a different grouping that the one you are trying to unassing.");
             }
 
             // The groupingid seems to be valid, change it for unassign.
