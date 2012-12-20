@@ -207,4 +207,113 @@ class core_group_external_testcase extends externallib_advanced_testcase {
         $this->setExpectedException('required_capability_exception');
         $froups = core_group_external::delete_groups(array($group3->id));
     }
+
+    /**
+     * Test assign_module_grouping() and unassign_module_grouping()
+     */
+    public function test_module_grouping() {
+        global $DB;
+        $this->resetAfterTest();
+
+        // create data to play with.
+        $course = $this->getDataGenerator()->create_course();
+        $context = context_course::instance($course->id);
+        $user = $this->getDataGenerator()->create_user();
+        $role = $DB->get_record('role', array('shortname' => 'student'));
+        $this->getDataGenerator()->enrol_user($user->id, $course->id, $role->id);
+        $record = new stdClass();
+        $record->courseid = $course->id;
+        $group1 = $this->getDataGenerator()->create_group($record);
+        $group2 = $this->getDataGenerator()->create_group($record);
+        $grouping1 = $this->getDataGenerator()->create_grouping($record);
+        $grouping2 = $this->getDataGenerator()->create_grouping($record);
+        $record->course = $course->id;
+        $module1 = $this->getDataGenerator()->create_module('assign', $record);
+        $module1 = get_coursemodule_from_instance('assign', $module1->id);
+        $module2 = $this->getDataGenerator()->create_module('assignment', $record);
+        $module2 = get_coursemodule_from_instance('assignment', $module2->id);
+        $module3 = $this->getDataGenerator()->create_module('assign', $record);
+        $module3 = get_coursemodule_from_instance('assign', $module3->id);
+
+        // Let us test it out with proper caps.
+        $this->setUser($user);
+        $this->assignUserCapability('moodle/course:manageactivities', $context->id, $role->id);
+        $this->assignUserCapability('moodle/course:managegroups', $context->id, $role->id);
+
+        $params = array(
+                array('groupingid' => $grouping1->id, 'cmid' => $module1->id),
+                array('groupingid' => $grouping1->id, 'cmid' => $module2->id),
+                array('groupingid' => $grouping2->id, 'cmid' => $module2->id),
+                array('groupingid' => $grouping2->id, 'cmid' => $module3->id));
+        core_group_external::assign_module_grouping($params);
+
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module1->id));
+        $this->assertEquals(true, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module2->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module2->id));
+        $this->assertEquals(true, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module3->id));
+        $this->assertEquals(true, $count);
+
+        $params = array(
+                array('groupingid' => $grouping1->id, 'cmid' => $module1->id),
+                array('groupingid' => $grouping2->id, 'cmid' => $module2->id),
+                array('groupingid' => $grouping2->id, 'cmid' => $module3->id));
+        core_group_external::unassign_module_grouping($params);
+
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module1->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module2->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module2->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module3->id));
+        $this->assertEquals(false, $count);
+
+
+
+        // No caps, no cookies.
+
+        $this->unassignUserCapability('moodle/course:manageactivities', $context->id, $role->id);
+        $this->unassignUserCapability('moodle/course:managegroups', $context->id, $role->id);
+
+        $params = array(
+                array('groupingid' => $grouping1->id, 'cmid' => $module1->id),
+                array('groupingid' => $grouping1->id, 'cmid' => $module2->id),
+                array('groupingid' => $grouping2->id, 'cmid' => $module2->id),
+                array('groupingid' => $grouping2->id, 'cmid' => $module3->id));
+        try {
+            core_group_external::assign_module_grouping($params);
+            $this->fail('Exception expected');
+        } catch (Exception $e) {
+            $this->assertInstanceOf('required_capability_exception', $e);
+        }
+
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module1->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module2->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module2->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module3->id));
+        $this->assertEquals(false, $count);
+
+        try {
+            core_group_external::assign_module_grouping($params);
+            $this->fail('Exception expected');
+        } catch (Exception $e) {
+            $this->assertInstanceOf('required_capability_exception', $e);
+        }
+
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module1->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping1->id, 'id' => $module2->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module2->id));
+        $this->assertEquals(false, $count);
+        $count = $DB->record_exists('course_modules', array('groupingid' => $grouping2->id, 'id' => $module3->id));
+        $this->assertEquals(false, $count);
+
+    }
 }

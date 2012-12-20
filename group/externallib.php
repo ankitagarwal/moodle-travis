@@ -1119,7 +1119,7 @@ class core_group_external extends external_api {
      * Returns description of method parameters
      *
      * @return external_function_parameters
-     * @since Moodle 2.3.1
+     * @since Moodle 2.5
      */
     public static function assign_module_grouping_parameters() {
         return new external_function_parameters(
@@ -1141,13 +1141,13 @@ class core_group_external extends external_api {
      *
      * @param array $assignments of arrays with keys groupingid, cmid
      * @return void
-     * @since Moodle 2.3.1
+     * @since Moodle 2.5
      */
     public static function assign_module_grouping($assignments) {
         global $CFG, $DB;
         require_once("$CFG->dirroot/group/lib.php");
 
-        $params = self::validate_parameters(self::assign_module_grouping_parameters(), array('assignments'=>$assignments));
+        $params = self::validate_parameters(self::assign_module_grouping_parameters(), array('assignments' => $assignments));
 
         $transaction = $DB->start_delegated_transaction();
         foreach ($params['assignments'] as $assignment) {
@@ -1186,7 +1186,7 @@ class core_group_external extends external_api {
             }
 
             if ($cm->groupingid != $groupingid) {
-                $DB->set_field('course_modules', 'groupingid', $groupingid, array('id'=>$cmid));
+                $DB->set_field('course_modules', 'groupingid', $groupingid, array('id' => $cmid));
             }
         }
 
@@ -1197,7 +1197,7 @@ class core_group_external extends external_api {
      * Returns description of method result value
      *
      * @return null
-     * @since Moodle 2.3.1
+     * @since Moodle 2.5
      */
     public static function assign_module_grouping_returns() {
         return null;
@@ -1207,7 +1207,7 @@ class core_group_external extends external_api {
      * Returns description of method parameters
      *
      * @return external_function_parameters
-     * @since Moodle 2.3.1
+     * @since Moodle 2.5
      */
     public static function unassign_module_grouping_parameters() {
         return new external_function_parameters(
@@ -1229,13 +1229,13 @@ class core_group_external extends external_api {
      *
      * @param array $assignments of arrays with keys groupingid, cmid
      * @return void
-     * @since Moodle 2.3.1
+     * @since Moodle 2.5
      */
     public static function unassign_module_grouping($assignments) {
         global $CFG, $DB;
         require_once("$CFG->dirroot/group/lib.php");
 
-        $params = self::validate_parameters(self::unassign_module_grouping_parameters(), array('assignments'=>$assignments));
+        $params = self::validate_parameters(self::unassign_module_grouping_parameters(), array('assignments' => $assignments));
 
         foreach ($params['assignments'] as $key => $assignment) {
             // Get the course module.
@@ -1258,7 +1258,7 @@ class core_group_external extends external_api {
      * Returns description of method result value
      *
      * @return null
-     * @since Moodle 2.3.1
+     * @since Moodle 2.5
      */
     public static function unassign_module_grouping_returns() {
         return null;

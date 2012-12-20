@@ -225,6 +225,7 @@ $functions = array(
         'classpath'   => 'group/externallib.php',
         'description' => 'Assing groupings to modules',
         'type'        => 'write',
+        'capabilites' => 'moodle/course:managegroups, moodle/course:manageactivities',
     ),
 
     'core_group_unassign_module_grouping' => array(
@@ -233,6 +234,7 @@ $functions = array(
         'classpath'   => 'group/externallib.php',
         'description' => 'Unassing groupings from modules',
         'type'        => 'write',
+        'capabilites' => 'moodle/course:managegroups, moodle/course:manageactivities',
     ),
 
     // === file related functions ===
