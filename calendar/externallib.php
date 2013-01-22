@@ -426,20 +426,20 @@ class core_calendar_external extends external_api {
      * @since Moodle 2.5
      */
     public static function update_calendar_events_parameters() {
-        // Userid is always current user, so no need to get it from client.
+        // We donot allow change of userid.
         // Module based calendar events are not allowed here. Hence no need of instance and modulename.
         // subscription id and uuid is not allowed as this is not an ical api.
         return new external_function_parameters(
                 array('events' => new external_multiple_structure(
                         new external_single_structure(
                             array(
+                                'id' => new external_value(PARAM_INT, 'event id', VALUE_REQUIRED, '', NULL_NOT_ALLOWED),
                                 'name' => new external_value(PARAM_TEXT, 'event name', VALUE_REQUIRED, '', NULL_NOT_ALLOWED),
                                 'description' => new external_value(PARAM_RAW, 'Description', VALUE_DEFAULT, null, NULL_ALLOWED),
                                 'format' => new external_format_value('description', VALUE_DEFAULT),
                                 'courseid' => new external_value(PARAM_INT, 'course id', VALUE_DEFAULT, 0, NULL_NOT_ALLOWED),
                                 'groupid' => new external_value(PARAM_INT, 'group id', VALUE_DEFAULT, 0, NULL_NOT_ALLOWED),
-                                'repeats' => new external_value(PARAM_INT, 'number of repeats', VALUE_DEFAULT, 0, NULL_NOT_ALLOWED),
-                                'eventtype' => new external_value(PARAM_TEXT, 'Event type', VALUE_DEFAULT, 'user', NULL_NOT_ALLOWED),
+                                'repeateditall' => new external_value(PARAM_BOOL, 'Make changes to all copies or not', VALUE_DEFAULT, false),
                                 'timestart' => new external_value(PARAM_INT, 'timestart', VALUE_DEFAULT, time(), NULL_NOT_ALLOWED),
                                 'timeduration' => new external_value(PARAM_INT, 'time duration', VALUE_DEFAULT, 0, NULL_NOT_ALLOWED),
                                 'visible' => new external_value(PARAM_INT, 'visible', VALUE_DEFAULT, 1, NULL_NOT_ALLOWED),
@@ -451,7 +451,7 @@ class core_calendar_external extends external_api {
     }
 
     /**
-     * Delete Calendar events.
+     * update Calendar events.
      *
      * @param array $events a list of events to update
      * @return array array of events update along with warnings for events that cannot be updated.
@@ -463,7 +463,7 @@ class core_calendar_external extends external_api {
         require_once($CFG->dirroot."/calendar/lib.php");
 
         // Parameter validation.
-        $params = self::validate_parameters(self::create_calendar_events_parameters(), array('events' => $events));
+        $params = self::validate_parameters(self::update_calendar_events_parameters(), array('events' => $events));
 
         $transaction = $DB->start_delegated_transaction();
         $return = array();
@@ -471,36 +471,37 @@ class core_calendar_external extends external_api {
 
         foreach ($params['events'] as $event) {
 
-            // Let us set some defaults.
-            $event['userid'] = $USER->id;
-            $event['modulename'] = '';
-            $event['instance'] = 0;
-            $event['subscriptionid'] = null;
-            $event['uuid']= '';
-            $event['format'] = external_validate_format($event['format']);
-            if ($event['repeats'] > 0) {
-                $event['repeat'] = 1;
+            $data = new stdClass();
+            $data->id = $event['id'];
+            $eventobj = new calendar_event($data);
+            // Return early if event is not of the type that should be edited, to save some calls.
+            if (!empty($eventobj->subscriptionid) || !empty($eventobj->uuid) ||
+                    !empty($eventobj->instance) || !empty($eventobj->modulename)) {
+                $warnings[] = array('item' => $event['id'], 'warningcode' => 'nopermissions', 'message' => 'you donot have permissions to update this event');
+                continue;
+            }
+            $eventobj->name = $event['name'];
+            $eventobj->format = external_validate_format($event['format']);
+            $eventobj->description = $event['description'];
+            $eventobj->courseid = $event['courseid'];
+            $eventobj->groupid = $event['groupid'];
+            $eventobj->description = $event['description'];
+            $eventobj->description = $event['description'];
+            $eventobj->description = $event['description'];
+            $eventobj->description = $event['description'];
+            if ($event['repeateditall']) {
+                $event['repeateditall'] = 1;
             } else {
-                $event['repeat'] = 0;
+                $event['repeateditall'] = 0;
             }
 
             $eventobj = new calendar_event($event);
 
-            // Let's check if the user is allowed to delete an event.
-            if (!calendar_add_event_allowed($eventobj)) {
-                $warnings [] = array('item' => $event['name'], 'warningcode' => 'nopermissions', 'message' => 'you donot have permissions to create this event');
-                continue;
-            }
-            // Let's create the event.
-            $var = $eventobj->create($event);
-            $var = (array)$var->properties();
-            if ($event['repeat']) {
-                $children = $DB->get_records('event', array('repeatid' => $var['id']));
-                foreach ($children as $child) {
-                    $return[] = (array) $child;
-                }
+            // Let's check the capabilty and create the event.
+            if ($eventobj->update($event, true)) {
+                $return[] = $event->id;
             } else {
-                $return[] = $var;
+                $warnings[] = array('item' => $event['id'], 'warningcode' => 'nopermissions', 'message' => 'you donot have permissions to update this event');
             }
         }
 
