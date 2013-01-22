@@ -480,22 +480,20 @@ class core_calendar_external extends external_api {
                 $warnings[] = array('item' => $event['id'], 'warningcode' => 'nopermissions', 'message' => 'you donot have permissions to update this event');
                 continue;
             }
-            $eventobj->name = $event['name'];
-            $eventobj->format = external_validate_format($event['format']);
-            $eventobj->description = $event['description'];
-            $eventobj->courseid = $event['courseid'];
-            $eventobj->groupid = $event['groupid'];
-            $eventobj->description = $event['description'];
-            $eventobj->description = $event['description'];
-            $eventobj->description = $event['description'];
-            $eventobj->description = $event['description'];
+            $eventobj->name         = $event['name'];
+            $eventobj->format       = external_validate_format($event['format']);
+            $eventobj->description  = $event['description'];
+            $eventobj->courseid     = $event['courseid'];
+            $eventobj->groupid      = $event['groupid'];
+            $eventobj->timestart    = $event['timestart'];
+            $eventobj->timeduration = $event['timeduration'];
+            $eventobj->visible      = $event['visible'];
+            $eventobj->sequence     = $event['sequence'];
             if ($event['repeateditall']) {
                 $event['repeateditall'] = 1;
             } else {
                 $event['repeateditall'] = 0;
             }
-
-            $eventobj = new calendar_event($event);
 
             // Let's check the capabilty and create the event.
             if ($eventobj->update($event, true)) {
@@ -522,24 +520,7 @@ class core_calendar_external extends external_api {
                         'events' => new external_multiple_structure( new external_single_structure(
                                 array(
                                     'id' => new external_value(PARAM_INT, 'event id'),
-                                    'name' => new external_value(PARAM_TEXT, 'event name'),
-                                    'description' => new external_value(PARAM_RAW, 'Description', VALUE_OPTIONAL),
-                                    'format' => new external_format_value('description'),
-                                    'courseid' => new external_value(PARAM_INT, 'course id'),
-                                    'groupid' => new external_value(PARAM_INT, 'group id'),
-                                    'userid' => new external_value(PARAM_INT, 'user id'),
-                                    'repeatid' => new external_value(PARAM_INT, 'repeat id', VALUE_OPTIONAL),
-                                    'modulename' => new external_value(PARAM_TEXT, 'module name', VALUE_OPTIONAL),
-                                    'instance' => new external_value(PARAM_INT, 'instance id'),
-                                    'eventtype' => new external_value(PARAM_TEXT, 'Event type'),
-                                    'timestart' => new external_value(PARAM_INT, 'timestart'),
-                                    'timeduration' => new external_value(PARAM_INT, 'time duration'),
-                                    'visible' => new external_value(PARAM_INT, 'visible'),
-                                    'uuid' => new external_value(PARAM_TEXT, 'unique id of ical events', VALUE_OPTIONAL, '', NULL_NOT_ALLOWED),
-                                    'sequence' => new external_value(PARAM_INT, 'sequence'),
-                                    'timemodified' => new external_value(PARAM_INT, 'time modified'),
-                                    'subscriptionid' => new external_value(PARAM_INT, 'Subscription id', VALUE_OPTIONAL),
-                                ), 'event')
+                                ), 'events')
                         ),
                       'warnings' => new external_warnings()
                     )
