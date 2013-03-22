@@ -682,89 +682,93 @@ function calendar_add_event_metadata($event) {
  * @param boolean $ignorehidden whether to select only visible events or all events
  * @return array $events of selected events or an empty array if there aren't any (or there was an error)
  */
-function calendar_get_events($tstart, $tend, $users, $groups, $courses, $withduration=true, $ignorehidden=true) {
+function calendar_get_events($tstart, $tend, $users, $groups, $courses, $withduration = true, $ignorehidden = true) {
     global $DB;
+    $params = array();
 
     $whereclause = '';
-    // Quick test
-    if(is_bool($users) && is_bool($groups) && is_bool($courses)) {
+    // Quick test.
+    if (is_bool($users) && is_bool($groups) && is_bool($courses)) {
         return array();
     }
 
-    if(is_array($users) && !empty($users)) {
-        // Events from a number of users
-        if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (userid IN ('.implode(',', $users).') AND courseid = 0 AND groupid = 0)';
-    } else if(is_numeric($users)) {
-        // Events from one user
-        if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (userid = '.$users.' AND courseid = 0 AND groupid = 0)';
-    } else if($users === true) {
-        // Events from ALL users
-        if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (userid != 0 AND courseid = 0 AND groupid = 0)';
-    } else if($users === false) {
-        // No user at all, do nothing
-    }
-
-    if(is_array($groups) && !empty($groups)) {
-        // Events from a number of groups
-        if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' groupid IN ('.implode(',', $groups).')';
-    } else if(is_numeric($groups)) {
-        // Events from one group
-        if(!empty($whereclause)) $whereclause .= ' OR ';
-        $whereclause .= ' groupid = '.$groups;
-    } else if($groups === true) {
-        // Events from ALL groups
-        if(!empty($whereclause)) $whereclause .= ' OR ';
-        $whereclause .= ' groupid != 0';
-    }
-    // boolean false (no groups at all): we don't need to do anything
-
-    if(is_array($courses) && !empty($courses)) {
+    if (is_array($users) && !empty($users)) {
+        // Events from a number of users.
+        if (!empty($whereclause)) {
+            $whereclause .= ' OR';
+        }
+        list($sql, $param) = $DB->get_in_or_equal($users, SQL_PARAMS_QM);
+        $params = array_merge($params, $param);
+        $whereclause .= ' (userid '. $sql .') AND courseid = 0 AND groupid = 0)';
+    } else if ($users === true) {
+        // Events from ALL users.
         if(!empty($whereclause)) {
             $whereclause .= ' OR';
         }
-        $whereclause .= ' (groupid = 0 AND courseid IN ('.implode(',', $courses).'))';
-    } else if(is_numeric($courses)) {
-        // One course
-        if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (groupid = 0 AND courseid = '.$courses.')';
-    } else if ($courses === true) {
-        // Events from ALL courses
-        if(!empty($whereclause)) $whereclause .= ' OR';
-        $whereclause .= ' (groupid = 0 AND courseid != 0)';
+        $whereclause .= ' (userid != 0 AND courseid = 0 AND groupid = 0)';
+    } else if ($users === false) {
+        // No user at all, do nothing.
     }
 
+    if (!empty($groups)) {
+        // Events from a number of groups.
+        if (!empty($whereclause)) {
+            $whereclause .= ' OR';
+        }
+        list($sql, $param) = $DB->get_in_or_equal($groups, SQL_PARAMS_QM);
+        $params = array_merge($params, $param);
+        $whereclause .= ' (groupid ' . $sql .')';
+    } else if ($groups === true) {
+        // Events from ALL groups.
+        if (!empty($whereclause)) {
+            $whereclause .= ' OR ';
+        }
+        $whereclause .= ' groupid != 0';
+    }
+    // Boolean false (no groups at all): we don't need to do anything
+
+    if (!empty($courses)) {
+        if (!empty($whereclause)) {
+            $whereclause .= ' OR';
+        }
+        list($sql, $param) = $DB->get_in_or_equal($courses, SQL_PARAMS_QM);
+        $params = array_merge($params, $param);
+        $whereclause .= ' (groupid = 0 AND courseid '. $sql . ')';
+    } else if ($courses === true) {
+        // Events from ALL courses.
+        if (!empty($whereclause)) {
+            $whereclause .= ' OR';
+        }
+        $whereclause .= ' (groupid = 0 AND courseid != 0)';
+    }
     // Security check: if, by now, we have NOTHING in $whereclause, then it means
     // that NO event-selecting clauses were defined. Thus, we won't be returning ANY
     // events no matter what. Allowing the code to proceed might return a completely
     // valid query with only time constraints, thus selecting ALL events in that time frame!
-    if(empty($whereclause)) {
+    if (empty($whereclause)) {
         return array();
     }
 
-    if($withduration) {
+    if ($withduration) {
         $timeclause = '(timestart >= '.$tstart.' OR timestart + timeduration > '.$tstart.') AND timestart <= '.$tend;
     }
     else {
         $timeclause = 'timestart >= '.$tstart.' AND timestart <= '.$tend;
     }
-    if(!empty($whereclause)) {
-        // We have additional constraints
+    if (!empty($whereclause)) {
+        // We have additional constraints.
         $whereclause = $timeclause.' AND ('.$whereclause.')';
     }
     else {
-        // Just basic time filtering
+        // Just basic time filtering.
         $whereclause = $timeclause;
     }
 
     if ($ignorehidden) {
         $whereclause .= ' AND visible = 1';
     }
-
-    $events = $DB->get_records_select('event', $whereclause, null, 'timestart');
+    echo $whereclause;
+    $events = $DB->get_records_select('event', $whereclause, $params, 'timestart');
     if ($events === false) {
         $events = array();
     }

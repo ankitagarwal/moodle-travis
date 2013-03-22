@@ -56,6 +56,7 @@ if (!empty($generateurl)) {
 if(!empty($what) && !empty($time)) {
     if(in_array($what, $allowed_what) && in_array($time, $allowed_time)) {
         $courses = enrol_get_users_courses($user->id, true, 'id, visible, shortname');
+        echo "ya";print_object($courses);
 
         if ($what == 'all') {
             $users = $user->id;
