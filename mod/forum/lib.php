@@ -1326,29 +1326,63 @@ function forum_print_overview($courses,&$htmlarray) {
 
     // Courses to search for new posts
     $coursessqls = array();
-    $params = array();
+    $modid = $DB->get_field('modules', 'id', array('name' => 'forum'));
+    $params = array($modid);
     foreach ($courses as $course) {
+
+        $groupsql = null;
+        $coursesql = null;
+        $args = array();
+        $canseeallgroups = has_capability('moodle/site:accessallgroups', context_course::instance($course->id));
+
+        if ($course->groupmode == SEPARATEGROUPS && $course->groupmodeforce && !$canseeallgroups) {
+            $mygroups = groups_get_all_groups($course->id, $USER->id, 0, "g.id");
+            // Fetch only stuff that the user can see.
+            if (!empty($mygroups)) {
+                list($gsql , $args) = $DB->get_in_or_equal(array_keys($mygroups));
+                $groupsql = "(d.groupid $gsql)";
+            }
+        } else if (!$course->groupmodeforce && !$canseeallgroups) {
+            // Things are fine at course level but can be overriden at forum level.
+
+            $mygroups = groups_get_all_groups($course->id, $USER->id, 0, "g.id");
+            // Fetch only stuff that the user can see if groupmode is separate.
+            if (!empty($mygroups)) {
+                list($gsql , $args) = $DB->get_in_or_equal(array_keys($mygroups));
+                $groupsql = "((d.groupid $gsql AND cm.groupmode = ?) OR cm.groupmode != ?)";
+                $args[] = SEPARATEGROUPS;
+                $args[] = SEPARATEGROUPS;
+            } else {
+                $groupsql = "cm.groupmode != ?";
+                $args[] = SEPARATEGROUPS;
+            }
+        }
 
         // If the user has never entered into the course all posts are pending
         if ($course->lastaccess == 0) {
-            $coursessqls[] = '(f.course = ?)';
+            $coursesql = '(f.course = ?)';
             $params[] = $course->id;
 
         // Only posts created after the course last access
         } else {
-            $coursessqls[] = '(f.course = ? AND p.created > ?)';
+            $coursesql = '(f.course = ? AND p.created > ?)';
             $params[] = $course->id;
             $params[] = $course->lastaccess;
         }
+        if (!empty($groupsql)) {
+            $coursesql = "($coursesql AND $groupsql)";
+            $params = array_merge($params, $args);
+        }
+        $coursessqls[] = $coursesql;
     }
     $params[] = $USER->id;
-    $coursessql = implode(' OR ', $coursessqls);
-
+    $where = implode(' OR ', $coursessqls);
     $sql = "SELECT f.id, COUNT(*) as count "
                 .'FROM {forum} f '
+                .'JOIN {course_modules} cm ON cm.instance = f.id AND cm.course = f.course AND cm.module = ? '
                 .'JOIN {forum_discussions} d ON d.forum  = f.id '
                 .'JOIN {forum_posts} p ON p.discussion = d.id '
-                ."WHERE ($coursessql) "
+                ."WHERE ($where) "
                 .'AND p.userid != ? '
                 .'GROUP BY f.id';
 
