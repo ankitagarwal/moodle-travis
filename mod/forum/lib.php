@@ -1319,7 +1319,7 @@ function forum_get_group_sql($course, $user = null) {
     if (empty($user)) {
         $user = $USER;
     }
-    $allcms = get_fast_modinfo($course);
+    $allcms = get_fast_modinfo($course, $user->id);
     $cms = $allcms->get_instances_of('forum');
     foreach($cms as $cm) {
         if (!$cm->uservisible) {
