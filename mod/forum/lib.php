@@ -1300,7 +1300,60 @@ function forum_user_complete($course, $user, $mod, $forum) {
     }
 }
 
+function forum_filter_visible_discussions($list,$courses) {
 
+    // Visibility flags, use local variable since, rest of the forum doesn't use it.
+    $can_see_all  = 1;
+    $can_see_groups = 2;
+
+    $previous = array('id' => 0, 'visibility' => $can_see_groups, 'groups' => array());
+    $visible = array();
+
+    foreach ($list as $forum) {
+        $id = $forum->id;
+        $allcms = get_fast_modinfo($courses[$forum->course])->get_cms();
+        $cm = $allcms[$forum->cmid];
+        if (!$cm->uservisible) {
+           contniue;
+        }
+        if ($id == $previous['id']) {
+            // We already know about group details.
+            switch ($previous['visibility']) {
+                case $can_see_all:
+                    $visible[$id]->count++;
+                    break;
+                case $can_see_groups:
+                    if (array_key_exists($forum->groupid, $previous['groups'])) {
+                        $visible[$id]->count++;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            // Fetch all details.
+            if (groups_get_activity_groupmode($cm) != NOGROUPS) {
+                // Groups are used.
+                $mygroups = groups_get_activity_allowed_groups($cm, $user);
+                if (!$mygroups) {
+                    $mygroups = array();
+                }
+                if (array_key_exists($forum->groupid, $mygroups)) {
+                   $visible[$id] = new stdClass();
+                   $visible[$id]->id = $id;
+                   $visible[$id]->count = 1;
+                }
+                $previous = array('id' => $id, 'visibility' => $can_see_groups, 'groups' => $mygroups);
+            } else {
+                   $visible[$id] = new stdClass();
+                   $visible[$id]->id = $id;
+                   $visible[$id]->count = 1;
+                   $previous = array('id' => $id, 'visibility' => $can_see_all, 'groups' => array());
+            }
+        }
+    }
+    return $visible;
+}
 
 
 
@@ -1325,7 +1378,8 @@ function forum_print_overview($courses,&$htmlarray) {
 
     // Courses to search for new posts
     $coursessqls = array();
-    $params = array();
+    $modid = $DB->get_field('modules', 'id', array('name' => 'forum'));
+    $params = array($modid);
     foreach ($courses as $course) {
 
         // If the user has never entered into the course all posts are pending
@@ -1343,17 +1397,21 @@ function forum_print_overview($courses,&$htmlarray) {
     $params[] = $USER->id;
     $coursessql = implode(' OR ', $coursessqls);
 
-    $sql = "SELECT f.id, COUNT(*) as count "
+    $sql = "SELECT  ". $DB->sql_concat_join('\'-\'', array('f.id', 'p.id')) .", f.id, f.course, d.id, d.groupid, cm.id as cmid "
                 .'FROM {forum} f '
+                .'JOIN {course_modules} cm ON cm.instance = f.id AND cm.course = f.course AND cm.module = ? '
                 .'JOIN {forum_discussions} d ON d.forum  = f.id '
                 .'JOIN {forum_posts} p ON p.discussion = d.id '
                 ."WHERE ($coursessql) "
                 .'AND p.userid != ? '
-                .'GROUP BY f.id';
+                .'ORDER BY f.id';
 
     if (!$new = $DB->get_records_sql($sql, $params)) {
         $new = array(); // avoid warnings
     }
+
+    // Remove records that user cannot see.
+    $new = forum_filter_visible_discussions($new, $courses);
 
     // also get all forum tracking stuff ONCE.
     $trackingforums = array();
