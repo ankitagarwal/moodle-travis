@@ -75,9 +75,20 @@ class test_external_files extends advanced_testcase {
         // Make sure itemid is always set to 0.
         $this->assertEquals(0, $fileinfo['itemid']);
 
+        // Let us try creating a file using contextlevel and instance id
+        $itemid = 0;
+        $filename = "Simple5.txt";
+        $contextid = 0;
+        $contextlevel = "user";
+        $instanceid = $USER->id;
+        $file = $browser->get_file_info($context, $component, $filearea, $itemid, $filepath, $filename);
+        $this->assertEmpty($file);
+        $fileinfo = core_files_external::upload($contextid, $component, $filearea, $itemid, $filepath, $filename, $filecontent, $contextlevel, $instanceid);
+        $this->assertEmpty($file);
+
         // Make sure the same file cannot be created again.
         $this->setExpectedException("moodle_exception");
-        core_files_external::upload($contextid, $component, $filearea, $itemid, $filepath, $filename, $filecontent);
+        core_files_external::upload($contextid, $component, $filearea, $itemid, $filepath, $filename, $filecontent, $contextlevel, $instanceid);
     }
 
     /*
