@@ -1201,9 +1201,16 @@ class '.$classname.' {
                         }
                     }
                 } else if ($keydesc->required == VALUE_OPTIONAL) {
-                    //it does make sens to declare a parameter VALUE_OPTIONAL
-                    //VALUE_OPTIONAL is used only for array/object key
-                    throw new moodle_exception('parametercannotbevalueoptional');
+                    // Allow VALUE_OPTIONAL for text values. Other params can be added later if seemed appropriate.
+                    switch($keydesc->type) {
+                        case PARAM_ALPHA:
+                        case PARAM_ALPHAEXT:
+                            $paramanddefault .= '= null'; break;
+                        case PARAM_INT:
+                            $paramanddefault .= '= 0'; break;
+                        default:
+                            throw new moodle_exception('parametercannotbevalueoptional');
+                    }
                 }
             } else { //for the moment we do not support default for other structure types
                  if ($keydesc->required == VALUE_DEFAULT) {
