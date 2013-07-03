@@ -4899,3 +4899,16 @@ function get_context_instance_by_id($id, $strictness = IGNORE_MISSING) {
     debugging('get_context_instance_by_id() is deprecated, please use context::instance_by_id($id) instead.', DEBUG_DEVELOPER);
     return context::instance_by_id($id, $strictness);
 }
+
+/**
+ * Returns system context or null if can not be created yet.
+ *
+ * @see context_system::instance()
+ * @deprecated since 2.2, use context_system::instance()
+ * @param bool $cache use caching
+ * @return context system context (null if context table not created yet)
+ */
+function get_system_context($cache = true) {
+    debugging('get_system_context() is deprecated, please use context_system::instance() instead.', DEBUG_DEVELOPER);
+    return context_system::instance(0, IGNORE_MISSING, $cache);
+}

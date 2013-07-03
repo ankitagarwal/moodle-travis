@@ -7255,17 +7255,6 @@ function remove_temp_roles($context, array $accessdata) {
 }
 
 /**
- * Returns system context or null if can not be created yet.
- *
- * @deprecated since 2.2, use context_system::instance()
- * @param bool $cache use caching
- * @return context system context (null if context table not created yet)
- */
-function get_system_context($cache = true) {
-    return context_system::instance(0, IGNORE_MISSING, $cache);
-}
-
-/**
  * Recursive function which, given a context, find all parent context ids,
  * and return the array in reverse order, i.e. parent first, then grand
  * parent, etc.
