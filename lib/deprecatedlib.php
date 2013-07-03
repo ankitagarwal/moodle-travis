@@ -4904,7 +4904,7 @@ function get_context_instance_by_id($id, $strictness = IGNORE_MISSING) {
  * Returns system context or null if can not be created yet.
  *
  * @see context_system::instance()
- * @deprecated since 2.2, use context_system::instance()
+ * @deprecated since 2.2
  * @param bool $cache use caching
  * @return context system context (null if context table not created yet)
  */
