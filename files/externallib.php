@@ -80,7 +80,7 @@ class core_files_external extends external_api {
         $browser = get_file_browser();
 
         if (empty($fileinfo['contextid'])) {
-            $context  = get_system_context();
+            $context  = context_system::instance();
         } else {
             $context  = context::instance_by_id($fileinfo['contextid']);
         }
@@ -274,7 +274,7 @@ class core_files_external extends external_api {
         if (!empty($fileinfo['contextid'])) {
             $context = context::instance_by_id($fileinfo['contextid']);
         } else {
-            $context = get_system_context();
+            $context = context_system::instance();
         }
 
         if (!($fileinfo['component'] == 'user' and $fileinfo['filearea'] == 'private')) {
