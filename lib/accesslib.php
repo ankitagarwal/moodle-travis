@@ -7228,30 +7228,14 @@ class context_block extends context {
 
 
 /**
- * Not available any more, use load_temp_course_role() instead.
+ * Returns system context or null if can not be created yet.
  *
- * @deprecated since 2.2
- * @param stdClass $context
- * @param int $roleid
- * @param array $accessdata
- * @return array
+ * @deprecated since 2.2, use context_system::instance()
+ * @param bool $cache use caching
+ * @return context system context (null if context table not created yet)
  */
-function load_temp_role($context, $roleid, array $accessdata) {
-    debugging('load_temp_role() is deprecated, please use load_temp_course_role() instead, temp role not loaded.');
-    return $accessdata;
-}
-
-/**
- * Not available any more, use remove_temp_course_roles() instead.
- *
- * @deprecated since 2.2
- * @param stdClass $context
- * @param array $accessdata
- * @return array access data
- */
-function remove_temp_roles($context, array $accessdata) {
-    debugging('remove_temp_role() is deprecated, please use remove_temp_course_roles() instead.');
-    return $accessdata;
+function get_system_context($cache = true) {
+    return context_system::instance(0, IGNORE_MISSING, $cache);
 }
 
 /**
