@@ -3840,7 +3840,7 @@ function course_category_show($category) {
  * @return object caregory
  */
 function get_course_category($catid=0) {
-    global $DB;
+    global $DB, $CFG, $USER, $ACCESSLIB_PRIVATE;
 
     debugging('Function get_course_category() is deprecated. Please use coursecat::get(), see phpdocs for more details');
 
@@ -3864,7 +3864,10 @@ function get_course_category($catid=0) {
             $catid = $DB->insert_record('course_categories', $cat);
             // make sure category context exists
             context_coursecat::instance($catid);
-            mark_context_dirty('/'.SYSCONTEXTID);
+
+            $context = context::instance_by_id(SYSCONTEXTID);
+            $context->mark_dirty();
+
             fix_course_sortorder(); // Required to build course_categories.depth and .path.
             $category = $DB->get_record('course_categories', array('id'=>$catid));
         }
@@ -5122,4 +5125,40 @@ function get_contextlevel_name($contextlevel) {
 function print_context_name(context $context, $withprefix = true, $short = false) {
     debugging('print_context_name() is deprecated, please use $context->get_context_name() instead.', DEBUG_DEVELOPER);
     return $context->get_context_name($withprefix, $short);
+}
+
+/**
+ * Mark a context as dirty (with timestamp) so as to force reloading of the context.
+ *
+ * @deprecated since 2.2, use $context->mark_dirty() instead
+ * @see context::mark_dirty()
+ * @param string $path context path
+ */
+function mark_context_dirty($path) {
+    global $CFG, $USER, $ACCESSLIB_PRIVATE;
+    debugging('mark_context_dirty() is deprecated, please use $context->mark_dirty() instead.', DEBUG_DEVELOPER);
+
+
+    if (during_initial_install()) {
+        return;
+    }
+
+    // only if it is a non-empty string
+    if (is_string($path) && $path !== '') {
+        set_cache_flag('accesslib/dirtycontexts', $path, 1, time()+$CFG->sessiontimeout);
+        if (isset($ACCESSLIB_PRIVATE->dirtycontexts)) {
+            $ACCESSLIB_PRIVATE->dirtycontexts[$path] = 1;
+        } else {
+            if (CLI_SCRIPT) {
+                $ACCESSLIB_PRIVATE->dirtycontexts = array($path => 1);
+            } else {
+                if (isset($USER->access['time'])) {
+                    $ACCESSLIB_PRIVATE->dirtycontexts = get_cache_flags('accesslib/dirtycontexts', $USER->access['time']-2);
+                } else {
+                    $ACCESSLIB_PRIVATE->dirtycontexts = array($path => 1);
+                }
+                // flags not loaded yet, it will be done later in $context->reload_if_dirty()
+            }
+        }
+    }
 }
