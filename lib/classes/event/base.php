@@ -108,7 +108,7 @@ abstract class base implements \IteratorAggregate {
      * @throws \coding_exception
      */
     public static final function create(array $data = null) {
-        global $PAGE, $USER;
+        global $USER;
 
         $data = (array)$data;
 
@@ -173,7 +173,7 @@ abstract class base implements \IteratorAggregate {
             }
         }
 
-        if (!array_key_exists('relateduserid', $data) and $event->context->contextlevel == CONTEXT_USER) {
+        if (!isset($data['relateduserid']) and $event->context->contextlevel == CONTEXT_USER) {
             $event->data['relateduserid'] = $event->context->instanceid;
         }
 
