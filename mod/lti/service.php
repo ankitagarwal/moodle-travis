@@ -156,8 +156,11 @@ switch ($messagetype) {
         //So this code knows whether to send an "operation not supported" or not.
         global $lti_web_service_handled;
         $lti_web_service_handled = false;
+        $context = context_system::instance();
 
-        events_trigger('lti_unknown_service_api_call', $data);
+        $event = \mod_lti\event\lti_unknown_service_api_called::create(array('context' => $context));
+        $event->set_legacy_data($data);
+        $event->trigger();
 
         if (!$lti_web_service_handled) {
             $responsexml = lti_get_response_xml(

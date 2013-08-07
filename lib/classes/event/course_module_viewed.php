@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,21 +14,35 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace core\event;
 /**
- * Defines event handlers
+ * Abstract event for viewing a course module.
  *
- * @package     workshopallocation_scheduled
- * @subpackage  mod_workshop
- * @category    event
- * @copyright   2013 David Mudrak <david@moodle.com>
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    core
+ * @copyright  2013 Adrian Greeve
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$observers = array(
-    array(
-        'eventname' => '\mod_workshop\event\workshop_viewed',
-        'callback'  => 'mod_workshop_observer::workshopallocation_scheduled_workshop_viewed',
-    )
-);
+/**
+ * Abstract course module viewed class.
+ *
+ * This class has to be extended by any course module viewed event.
+ * @see workshop_viewed for an example.
+ *
+ * @package    core
+ * @copyright  2013 Adrian Greeve
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+abstract class course_module_viewed extends base {
+
+    /**
+     * Init method.
+     */
+    protected function init() {
+        $this->data['crud'] = 'r';
+        // TODO: MDL-37658 set level
+        $this->data['level'] = 50;
+    }
+}

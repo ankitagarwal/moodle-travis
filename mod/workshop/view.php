@@ -41,30 +41,34 @@ $sorthow    = optional_param('sorthow', 'ASC', PARAM_ALPHA);
 $eval       = optional_param('eval', null, PARAM_PLUGIN);
 
 if ($id) {
-    $cm         = get_coursemodule_from_id('workshop', $id, 0, false, MUST_EXIST);
-    $course     = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-    $workshop   = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
+    $cm             = get_coursemodule_from_id('workshop', $id, 0, false, MUST_EXIST);
+    $course         = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
+    $workshoprecord = $DB->get_record('workshop', array('id' => $cm->instance), '*', MUST_EXIST);
 } else {
-    $workshop   = $DB->get_record('workshop', array('id' => $w), '*', MUST_EXIST);
-    $course     = $DB->get_record('course', array('id' => $workshop->course), '*', MUST_EXIST);
-    $cm         = get_coursemodule_from_instance('workshop', $workshop->id, $course->id, false, MUST_EXIST);
+    $workshoprecord = $DB->get_record('workshop', array('id' => $w), '*', MUST_EXIST);
+    $course         = $DB->get_record('course', array('id' => $workshoprecord->course), '*', MUST_EXIST);
+    $cm             = get_coursemodule_from_instance('workshop', $workshoprecord->id, $course->id, false, MUST_EXIST);
 }
 
 require_login($course, true, $cm);
 require_capability('mod/workshop:view', $PAGE->context);
 
-$workshop = new workshop($workshop, $cm, $course);
-$workshop->log('view');
+$workshop = new workshop($workshoprecord, $cm, $course);
 
 // Mark viewed
 $completion = new completion_info($course);
 $completion->set_module_viewed($cm);
 
-// Fire the event
-events_trigger('workshop_viewed', (object)array(
-    'workshop' => $workshop,
-    'user' => $USER,
-));
+$eventdata = array();
+$eventdata['objectid'] = $workshop->id;
+$eventdata['context'] = $workshop->context;
+$eventdata['courseid'] = $course->id;
+
+$event = \mod_workshop\event\workshop_viewed::create($eventdata);
+$event->add_record_snapshot('course', $course);
+$event->add_record_snapshot('workshop', $workshoprecord);
+$event->set_legacy_event_objects($workshop, $USER);
+$event->trigger();
 
 // If the phase is to be switched, do it asap. This just has to happen after triggering
 // the event so that the scheduled allocator had a chance to allocate submissions.
