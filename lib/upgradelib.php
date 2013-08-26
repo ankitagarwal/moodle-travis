@@ -2063,3 +2063,69 @@ function upgrade_rename_old_backup_files_using_shortname() {
         @rename($dir . '/' . $file, $dir . '/' . $newname);
     }
 }
+
+/**
+ * Code to fix course section sequence during upgrade.
+ */
+function upgrade_fix_course_section_sequence() {
+    global $DB;
+
+    $coursesections = $DB->get_records_sql(upgrade_get_corrupt_sequence_section_sql());
+    foreach ($coursesections as $coursesection) {
+        // Retrieve all of the actual modules in this course and section combination to reduce DB calls.
+        $actualsectionmodules = $DB->get_records('course_modules',
+            array('course' => $coursesection->course, 'section' => $coursesection->id), '', 'id, section');
+
+        // Break out the current sequence so that we can compare it.
+        $currentsequence = explode(',', $coursesection->sequence);
+        $newsequence = array();
+
+        // Check each of the modules in the current sequence.
+        foreach ($currentsequence as $module) {
+            if (isset($actualsectionmodules[$module])) {
+                $newsequence[] = $module;
+                // We unset the actual section modules so that we don't get duplicates and that we can add orphaned modules later.
+                unset($actualsectionmodules[$module]);
+            }
+        }
+
+        // Append any modules which have somehow been orphaned
+        foreach ($actualsectionmodules as $module) {
+            $newsequence[] = $module->id;
+        }
+
+        // Piece it all back together
+        $sequence = implode(',', $newsequence);
+
+        // Only update if there have been changes
+        if ($sequence !== $coursesection->sequence) {
+            $coursesection->sequence = $sequence;
+            $DB->update_record('course_sections', $coursesection);
+
+            // And clear the section cache and modinfo cache - they'll be regenerated on next use.
+            $course = new stdClass();
+            $course->id = $coursesection->course;
+            $course->sectioncache = null;
+            $course->modinfo = null;
+            $DB->update_record('course', $course);
+        }
+    }
+}
+
+function upgrade_get_corrupt_sequence_section_sql() {
+    global $DB;
+
+    // Here we are matching trying to figure out if the sequence field of course section table is corrupted or not.
+    // It will return only the sections which are corrupt.
+
+    $sequenceconcat = $DB->sql_concat("','", 'cs.sequence', "','");
+    $moduleconcat = $DB->sql_concat("'%,'", 'cm.id', "',%'");
+    return "SELECT csm.id, csm.course, csm.sequence
+              FROM {course_sections} csm
+              JOIN (SELECT DISTINCT cs.id
+                      FROM {course_sections} cs
+                      JOIN {course_modules} cm ON (cm.course = cs.course AND cm.section = cs.id)
+                     WHERE $sequenceconcat NOT LIKE $moduleconcat) cid ON (cid.id = csm.id)
+              ORDER BY csm.course, csm.id";
+}
+
