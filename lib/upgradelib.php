@@ -2120,12 +2120,14 @@ function upgrade_get_corrupt_sequence_section_sql() {
 
     $sequenceconcat = $DB->sql_concat("','", 'cs.sequence', "','");
     $moduleconcat = $DB->sql_concat("'%,'", 'cm.id', "',%'");
+    $moduleconcatrepeat = $DB->sql_concat("'%,'", 'cm.id', "',%'", 'cm.id', "',%'");
     return "SELECT csm.id, csm.course, csm.sequence
               FROM {course_sections} csm
               JOIN (SELECT DISTINCT cs.id
                       FROM {course_sections} cs
                       JOIN {course_modules} cm ON (cm.course = cs.course AND cm.section = cs.id)
-                     WHERE $sequenceconcat NOT LIKE $moduleconcat) cid ON (cid.id = csm.id)
+                     WHERE ($sequenceconcat NOT LIKE $moduleconcat)
+                        OR ($sequenceconcat LIKE $moduleconcatrepeat)) cid ON (cid.id = csm.id)
               ORDER BY csm.course, csm.id";
 }
 
