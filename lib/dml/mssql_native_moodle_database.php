@@ -478,7 +478,7 @@ class mssql_native_moodle_database extends moodle_database {
             $info->max_length = ($info->meta_type == 'X' || $info->meta_type == 'B') ? -1 : $info->max_length;
 
             // Scale
-            $info->scale = $rawcolumn->scale ? $rawcolumn->scale : false;
+            $info->scale = $rawcolumn->scale;
 
             // Prepare not_null info
             $info->not_null = $rawcolumn->is_nullable == 'NO'  ? true : false;
