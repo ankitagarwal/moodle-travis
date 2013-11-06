@@ -700,6 +700,16 @@ class ddl_testcase extends database_driver_testcase {
         $this->assertEquals($columns['onenumber']->meta_type    ,'N');
         $this->assertEquals($DB->get_field('test_table1', 'onenumber', array(), IGNORE_MULTIPLE), 2.550); //check default has been applied
 
+        // Add one numeric field with scale of 0 and check it.
+        $field = new xmldb_field('onenumberwith0scale');
+        $field->set_attributes(XMLDB_TYPE_NUMBER, '6,0', null, XMLDB_NOTNULL, null, 2);
+        $dbman->add_field($table, $field);
+        $this->assertTrue($dbman->field_exists($table, 'onenumberwith0scale'));
+        $columns = $DB->get_columns('test_table1');
+        $this->assertEquals(6, $columns['onenumberwith0scale']->max_length);
+        // We can not use assertEquals as that accepts null/false as a valid value.
+        $this->assertSame('0', strval($columns['onenumberwith0scale']->scale));
+
         // add one float field and check it (not official type - must work as number)
         $field = new xmldb_field('onefloat');
         $field->set_attributes(XMLDB_TYPE_FLOAT, '6,3', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 3.550);
@@ -728,7 +738,7 @@ class ddl_testcase extends database_driver_testcase {
         $columns = $DB->get_columns('test_table1');
         $this->assertEquals($columns['onechar']->name         ,'onechar');
         $this->assertEquals($columns['onechar']->max_length   , 25);
-        $this->assertEquals($columns['onechar']->scale        , null);
+        $this->assertNull($columns['onechar']->scale);
         $this->assertEquals($columns['onechar']->not_null     , true);
         $this->assertEquals($columns['onechar']->primary_key  , false);
         $this->assertEquals($columns['onechar']->binary       , false);
