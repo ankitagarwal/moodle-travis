@@ -213,7 +213,7 @@ Feature: Award badges
     And I log out
     And I log in as "teacher1"
     And I follow "Course 1"
-    And I click on "//span[text()='Badges']" "xpath_element" in the "Administration" "block"
+    And I expand "Badges" node in the "Administration" "block"
     And I follow "Add a new badge"
     And I fill the moodle form with:
       | Name | Course Badge |
