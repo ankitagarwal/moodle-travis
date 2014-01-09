@@ -29,6 +29,7 @@ require_once(__DIR__ . '/../../behat/behat_base.php');
 
 use Behat\Mink\Exception\ExpectationException as ExpectationException,
     Behat\Behat\Context\Step\Given as Given,
+    Moodle\BehatExtension\Exception\SkippedException as SkippedException,
     Behat\Gherkin\Node\TableNode as TableNode;
 
 /**
@@ -40,6 +41,17 @@ use Behat\Mink\Exception\ExpectationException as ExpectationException,
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_permissions extends behat_base {
+
+    /**
+     * Checks that Ghostscript is installed.
+     *
+     * @Given /^I run a skip test$/
+     */
+    public function skiptest() {
+
+        throw new SkippedException();
+
+    }
 
     /**
      * Set system level permissions to the specified role. Expects a table with capability name and permission (Inherit/Allow/Prevent/Prohibit) columns.

@@ -8,7 +8,7 @@ Feature: Add badges to the system
     Given I am on homepage
     And I log in as "admin"
 
-  @javascript
+  @javascript @what
   Scenario: Setting badges settings
     Given I expand "Site administration" node
     And I expand "Badges" node
