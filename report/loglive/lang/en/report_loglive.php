@@ -20,12 +20,21 @@
  * Language strings used by report_loglive
  *
  * @package    report_loglive
- * @copyright  2011 Petr Skoda
+ * @copyright  2014 onwards Ankit Agarwal
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $string['eventreportviewed'] = 'Live log report viewed';
-$string['loglive:view'] = 'View live logs';
-$string['pluginname'] = 'Live logs';
+$string['eventcomponent'] = 'Component';
+$string['eventcontext'] = 'Event context';
+$string['eventloggedas'] = '{$a->realusername} as {$a->asusername}';
+$string['eventorigin'] = 'Origin';
+$string['eventrelatedfullnameuser'] = 'Affected user';
 $string['livelogs'] = 'Live logs from the past hour';
-$string['page'] = 'Page {$a}';
+$string['loglive:view'] = 'View live logs';
+$string['nologreaderenabled'] = 'No log reader enabled';
+$string['pause'] = 'Pause live updates';
+$string['pluginname'] = 'Live logs';
+$string['resume'] = 'Resume live updates';
+$string['selectreader'] = 'Select log reader';
+
