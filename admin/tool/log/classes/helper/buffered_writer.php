@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Helper trait writer
+ * Helper trait buffered_writer
  *
  * @package    tool_log
  * @copyright  2014 onwards Ankit Agarwal
@@ -26,14 +26,14 @@ namespace tool_log\helper;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Helper trait writer. Adds buffer support for the store.
+ * Helper trait buffered_writer. Adds buffer support for the store.
  * \tool_log\helper\store must be included before using this trait.
  *
  * @package    tool_log
  * @copyright  2014 onwards Ankit Agarwal
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-trait writer {
+trait buffered_writer {
 
     /** @var array $buffer buffer of events. */
     protected $buffer = array();
@@ -46,7 +46,7 @@ trait writer {
 
     /**
      * Write event in the store with buffering. Method insert_events() must be
-     * defined. Override in stores if the store does not support buffering.
+     * defined.
      *
      * @param \core\event\base $event
      *
