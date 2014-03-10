@@ -22,16 +22,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace report_loglive;
+
 require_once($CFG->dirroot.'/lib/tablelib.php');
 
 /**
  * Log live report manager.
- * //TODO add docs
+ *
  * @package    report_loglive
  * @copyright  2014 Ankit Agarwal
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 class manager {
 
     /** @var int number of entries to show per page */
@@ -167,7 +167,7 @@ class manager {
         $result = array();
         $result['userfullname'] = array();
         $result['courseshortname'] = array();
-        // For each event cache full username and course. //TODO use request muc.
+        // For each event cache full username and course. // TODO MDL-44526 use request muc.
         foreach ($events as $event) {
             $logextra = $event->get_logextra();
             if (!isset($result['userfullname'][$event->userid])) {

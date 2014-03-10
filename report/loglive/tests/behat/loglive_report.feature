@@ -11,7 +11,7 @@ Feature: In a report, admin can see loglive data
     And I log in as "admin"
     And I set the following administration settings values:
       | Log legacy data | 1 |
-    And I navigate to "Manage log stores" node in "Site administration,Plugins,Logging"
+    And I navigate to "Manage log stores" node in "Site administration>Plugins>Logging"
     And I click on "Enable" "link" in the "Standard log" "table_row"
     And I am on homepage
     And I follow "Course 1"
@@ -22,7 +22,7 @@ Feature: In a report, admin can see loglive data
 
   @javascript
   Scenario: Check loglive report entries and make sure the report works for standard and legacy reader
-    Given I navigate to "Live logs" node in "Site administration,Reports"
+    Given I navigate to "Live logs" node in "Site administration>Reports"
     When I set the field "reader" to "Standard log"
     Then I should see "Course module created"
     And I should see "Test name"
@@ -34,7 +34,7 @@ Feature: In a report, admin can see loglive data
   @javascript
   Scenario: Check loglive report entries and make sure the ajax call works for standard reader
     Given I am on homepage
-    When I navigate to "Live logs" node in "Site administration,Reports"
+    When I navigate to "Live logs" node in "Site administration>Reports"
     And I set the field "reader" to "Standard log"
     And I wait to be redirected
     And I should not see "Test name2"
@@ -53,7 +53,7 @@ Feature: In a report, admin can see loglive data
   @javascript
   Scenario: Check loglive report entries and make sure the ajax call works for legacy reader
     Given I am on homepage
-    When I navigate to "Live logs" node in "Site administration,Reports"
+    When I navigate to "Live logs" node in "Site administration>Reports"
     And I set the field "reader" to "Legacy log"
     And I wait to be redirected
     And I should not see "Test name2"
@@ -72,7 +72,7 @@ Feature: In a report, admin can see loglive data
   @javascript
   Scenario: Check loglive report entries and make sure the pause/resume button works for standard reader
     Given I am on homepage
-    When I navigate to "Live logs" node in "Site administration,Reports"
+    When I navigate to "Live logs" node in "Site administration>Reports"
     And I set the field "reader" to "Standard log"
     And I wait to be redirected
     And I should not see "Test name2"
@@ -95,7 +95,7 @@ Feature: In a report, admin can see loglive data
   @javascript
   Scenario: Check loglive report entries and make sure the pause/resume button works for legacy reader
     Given I am on homepage
-    When I navigate to "Live logs" node in "Site administration,Reports"
+    When I navigate to "Live logs" node in "Site administration>Reports"
     And I set the field "reader" to "Legacy log"
     And I wait to be redirected
     And I should not see "Test name2"
