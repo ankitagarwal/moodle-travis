@@ -1,12 +1,22 @@
-<div class="modal-dialog">
+<div class="modal-dialog" >
     <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" ng-click="cancel()">&times;</button>
-            <h4 class="modal-title">Modal title</h4>
+            <h4 class="modal-title" ng-bind-html="title"></h4>
         </div>
-        <div class="modal-body">
-            <div class="current1">{{current1.title}}</div>
-            <div class="current2">{{total}}</div>
+
+        <div class="modal-body row-fluid clearfix">
+            <div class="chapter span6" ng-repeat="chapter in chapters" ng-if="chapter.visible" class="animate-if">
+                <button class="leftnav" ng-click="prev($index)" ng-disabled="disableButton($index)" ng-if="$even">
+                    <img src = '/pgmaster/mod/book/pix/right.png' />
+                </button>
+                <button class="rightnav" ng-click="next($index)" ng-disabled="disableButton($index)" ng-if="$odd">
+                    <img src = '/pgmaster/mod/book/pix/left.png' />
+                </button>
+                <h3 class="modal-title">{{chapter.title}}</h3>
+                <div class="content" ng-bind-html="chapter.content"></div>
+            </div>
         </div>
+
     </div><!-- /.modal-content -->
 </div><!-- /.modal-dialog -->

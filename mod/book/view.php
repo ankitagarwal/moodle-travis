@@ -188,6 +188,20 @@ if ($nextid) {
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading($book->name);
+$PAGE->requires->js('/mod/book/angular/angular.js');
+$PAGE->requires->js('/mod/book/angular/angular-sanitize.min.js');
+$PAGE->requires->js('/mod/book/angular/angular-animate.min.js');
+$PAGE->requires->js('/mod/book/angular/ui-bootstrap-custom-0.10.0.min.js');
+$PAGE->requires->js('/mod/book/angular/display.js');
+
+echo '
+<div ng-app = "mod_book_display">
+    <div class="row-fluid">
+        <div ng-controller = "ctrl" ng-init = "init('.$book->id.')">
+            <p><button class="btn btn-primary" ng-click="openPopup()">Launch full screen mode</button></p>
+        </div>
+    </div>
+</div>';
 
 // upper nav
 echo '<div class="navtop">'.$chnavigation.'</div>';

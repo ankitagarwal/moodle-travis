@@ -53,4 +53,5 @@ foreach ($chapters as $chapter) {
         $topchapters[$chapter->id] = $chapter->id;
     }
 }
-echo json_encode(array('toc' => $topchapters, 'chapters' => $chapters));
+echo json_encode(array('toc' => $topchapters, 'chapters' => $chapters, 'title' => format_text($book->name, FORMAT_HTML,
+            $context)));
