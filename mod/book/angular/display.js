@@ -26,6 +26,10 @@ app.controller('ctrl', function($scope, $http, $modal, $sce) {
                     var entry = chapters[key];
                     entry.content = $sce.trustAsHtml(entry.content);
                     entry.visible = false;
+                    entry.ngenter = false;
+                    entry.ngenteractive = false;
+                    entry.ngleave = false;
+                    entry.ngleaveactive = false;
                     $scope.chapters.push(entry);
                 });
                 $scope.total = $scope.chapters.length;
@@ -73,7 +77,6 @@ app.controller('ctrl', function($scope, $http, $modal, $sce) {
                 // Prev button
                 $scope.prev(key);
             } else {
-                console.log(key);
                 $scope.next(key);
             }
         };
@@ -85,9 +88,19 @@ app.controller('ctrl', function($scope, $http, $modal, $sce) {
             $scope.chapters[k].visible = false;
             k += 2;
             $scope.chapters[k].visible = true;
-            k++;
-            $scope.chapters[k].visible = true;
+            var l = k + 1;
+            $scope.chapters[l].visible = true;
+            $scope.chapters[k].ngenter = true;
+            $scope.chapters[l].ngenter = true;
+            setTimeout($scope.updateClass(k, l , 'ngenteractive', $scope), 2000);
+
         };
+
+        $scope.updateClass = function (k, l , prop, spe) {
+            spe.chapters[k][prop] = true;
+            spe.chapters[l][prop] = true;
+            console.log(spe);
+        }
 
         $scope.prev = function (k) {
             // No need to validate if next exist, this function wouldn't be called if didn't
@@ -96,8 +109,20 @@ app.controller('ctrl', function($scope, $http, $modal, $sce) {
             $scope.chapters[k].visible = false;
             k -= 2;
             $scope.chapters[k].visible = true;
-            k--;
+            var l = k - 1;
             $scope.chapters[k].visible = true;
+            $scope.chapters[k].ngleave = true;
+            $scope.chapters[l].ngleave = true;
+            $scope.chapters[k].ngenter = false;
+            $scope.chapters[l].ngenter = false;
+            $scope.chapters[k].ngenterleave = false;
+            $scope.chapters[l].ngenterleave = false;
+
+            setTimeout(function() {
+                console.log(k);
+                $scope.chapters[k].ngleaveactive = true;
+                $scope.chapters[l].ngleaveactive = true;
+            }, 1000);
         };
 
         $scope.disableButton = function (key) {
@@ -112,10 +137,9 @@ app.controller('ctrl', function($scope, $http, $modal, $sce) {
                 // next button.
                 p1 = key + 1;
                 p2 = key + 2;
-                console.log(key);
                 return !($scope.chapters[p1] && $scope.chapters[p2])
             }
-        }
+        };
 
     };
 

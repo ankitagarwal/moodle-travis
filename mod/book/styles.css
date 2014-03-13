@@ -107,6 +107,7 @@ body .modal {
 }
 .modal .modal-body {
     max-height: 90%;
+    width: 97%;
 }
 .leftnav {
     float: left;
@@ -115,21 +116,21 @@ body .modal {
     float: right;
 }
 
+.animate-if {
+    background:transparent;
+}
+
 .animate-if.ng-enter, .animate-if.ng-leave {
-    -webkit-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 2s;
-    -moz-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 2s;
-    -o-transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 2s;
-    transition: all cubic-bezier(0.250, 0.460, 0.450, 0.940) 2s;
+    -webkit-transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 2s;
+    transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 2s;
 }
 
 .animate-if.ng-enter,
 .animate-if.ng-leave.ng-leave-active {
-    -ms-opacity: 0;
-    opacity: 0;
+    opacity:0;
 }
 
 .animate-if.ng-leave,
 .animate-if.ng-enter.ng-enter-active {
-    -ms-opacity: 1;
-    opacity: 1;
+    opacity:1;
 }
