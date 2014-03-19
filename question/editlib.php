@@ -181,7 +181,7 @@ abstract class question_bank_column_base {
             }
             $links = array();
             foreach ($sortable as $subsort => $details) {
-                $links[] = $this->make_sort_link($name . '_' . $subsort,
+                $links[] = $this->make_sort_link($name . '-' . $subsort,
                         $details['title'], '', !empty($details['reverse']));
             }
             echo '<div class="sorters">' . implode(' / ', $links) . '</div>';
@@ -951,12 +951,56 @@ class question_bank_view {
     }
 
     protected function wanted_columns() {
-        $columns = array('checkbox', 'qtype', 'questionname', 'editaction', 'copyaction',
-                        'previewaction', 'deleteaction', 'creatorname', 'modifiername');
+        global $CFG;
+        if (empty($CFG->questionbankcolumns)) {
+            $questionbankcolumns = array('checkbox', 'qtype', 'questionname', 'editaction',
+                                     'previewaction', 'deleteaction', 'creatorname',
+                                     'modifiername');
+        } else {
+             $questionbankcolumns = explode(',', $CFG->questionbankcolumns);
+        }
+        foreach ($questionbankcolumns as $fullname) {
+            $column = self::get_column_type($fullname);
+            if ($column) {
+                $columns[] = $column;
+            }
+        }
         if (question_get_display_preference('qbshowtext', 0, PARAM_BOOL, new moodle_url(''))) {
             $columns[] = 'questiontext';
         }
         return $columns;
+    }
+
+
+    /**
+     * Get a column object from its name.
+     *
+     * @param string $columnname Frankenstyle component name followed by |column_name, ie 'local_qbmodified|lastmodified'.
+     * @return question_bank_column_base A question_bank_column_base object. Throws an exception if no such type exists.
+     * @throws Exception if no column type by that name is defined.
+     */
+    protected function get_column_type($columnname) {
+        if (!empty($this->knowncolumntypes[$columnname])) {
+            return $this->knowncolumntypes[$columnname];
+        }
+        list($component, $column) = explode('|', $columnname);
+        list($plugintype, $pluginname) = core_component::normalize_component($component);
+
+        if ($plugintype == 'core' and is_null($pluginname)) {
+             $component = 'core';
+        } else {
+             $component = $plugintype.'_'.$pluginname;
+        }
+
+        if ( empty($this->knowncolumntypes[$component]) ) {
+             // The callback $component . _question_bank_column_types should return an array of
+             // question_bank_column_base derived objects provided by the component, indexed by name.
+            $this->knowncolumntypes[$component] = component_callback($component, 'question_bank_column_types', array($this));
+        }
+        if (! $this->knowncolumntypes[$component][$column] ) {
+            throw new coding_exception("No $column object returned from $component.");
+        }
+        return $this->knowncolumntypes[$component][$column];
     }
 
     /**
@@ -999,15 +1043,14 @@ class question_bank_view {
     protected function init_columns($wanted, $heading = '') {
         $this->visiblecolumns = array();
         $this->extrarows = array();
-        foreach ($wanted as $colname) {
-            if (!isset($this->knowncolumntypes[$colname])) {
-                throw new coding_exception('Unknown column type ' . $colname . ' requested in init columns.');
+        foreach ($wanted as $column) {
+            if (!self::get_column_type($column->get_name())) {
+                throw new coding_exception('Unknown column type ' . $column->get_name() . ' requested in init columns.');
             }
-            $column = $this->knowncolumntypes[$colname];
             if ($column->is_extra_row()) {
-                $this->extrarows[$colname] = $column;
+                $this->extrarows[$column->get_name()] = $column;
             } else {
-                $this->visiblecolumns[$colname] = $column;
+                $this->visiblecolumns[$column->get_name()] = $column;
             }
         }
         $this->requiredcolumns = array_merge($this->visiblecolumns, $this->extrarows);
@@ -1049,23 +1092,24 @@ class question_bank_view {
      * @return array array($colname, $subsort).
      */
     protected function parse_subsort($sort) {
-    /// Do the parsing.
-        if (strpos($sort, '_') !== false) {
-            list($colname, $subsort) = explode('_', $sort, 2);
+        // Do the parsing.
+        if (strpos($sort, '-') !== false) {
+            list($colname, $subsort) = explode('-', $sort, 2);
         } else {
             $colname = $sort;
             $subsort = '';
         }
-    /// Validate the column name.
-        if (!isset($this->knowncolumntypes[$colname]) || !$this->knowncolumntypes[$colname]->is_sortable()) {
-            for ($i = 1; $i <= question_bank_view::MAX_SORTS; $i++) {
+        // Validate the column name.
+        $column = $this->get_column_type($colname);
+        if (!isset($column) || !$column->is_sortable()) {
+            for ($i = 1; $i <= self::MAX_SORTS; $i++) {
                 $this->baseurl->remove_params('qbs' . $i);
             }
             throw new moodle_exception('unknownsortcolumn', '', $link = $this->baseurl->out(), $colname);
         }
-    /// Validate the subsort, if present.
+        // Validate the subsort, if present.
         if ($subsort) {
-            $subsorts = $this->knowncolumntypes[$colname]->is_sortable();
+            $subsorts = $column->is_sortable();
             if (!is_array($subsorts) || !isset($subsorts[$subsort])) {
                 throw new moodle_exception('unknownsortcolumn', '', $link = $this->baseurl->out(), $sort);
             }
@@ -1075,8 +1119,8 @@ class question_bank_view {
 
     protected function init_sort_from_params() {
         $this->sort = array();
-        for ($i = 1; $i <= question_bank_view::MAX_SORTS; $i++) {
-            if (!$sort = optional_param('qbs' . $i, '', PARAM_ALPHAEXT)) {
+        for ($i = 1; $i <= self::MAX_SORTS; $i++) {
+            if (!$sort = optional_param('qbs' . $i, '', PARAM_TEXT)) {
                 break;
             }
             // Work out the appropriate order.
@@ -1090,7 +1134,7 @@ class question_bank_view {
             }
             // Deal with subsorts.
             list($colname, $subsort) = $this->parse_subsort($sort);
-            $this->requiredcolumns[$colname] = $this->knowncolumntypes[$colname];
+            $this->requiredcolumns[$colname] = $this->get_column_type($colname);
             $this->sort[$sort] = $order;
         }
     }
@@ -1176,7 +1220,7 @@ class question_bank_view {
     protected function build_query() {
         global $DB;
 
-    /// Get the required tables.
+        // Get the required tables.
         $joins = array();
         foreach ($this->requiredcolumns as $column) {
             $extrajoins = $column->get_extra_joins();
