@@ -49,4 +49,13 @@ interface manager {
      * @return void
      */
     public function dispose();
+
+    /**
+     * For a given report, returns a list of log stores that are supported.
+     *
+     * @param string $report report name.
+     *
+     * @return array list of stores that support the given report.
+     */
+    public function get_supported_stores($report);
 }
