@@ -306,6 +306,16 @@ class manager {
     }
 
     /**
+     * Returns all observers in the system. This is only for use for reporting on the list of observers in the system.
+     *
+     * @return array An array of stdClass with all core observer details.
+     */
+    public static function get_all_observers() {
+        self::init_all_observers();
+        return self::$allobservers;
+    }
+
+    /**
      * Replace all standard observers.
      * @param array $observers
      * @return array
