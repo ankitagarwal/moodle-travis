@@ -1,0 +1,10 @@
+{
+    "name": "moodle-report_eventlist-sectionhide",
+    "builds": {
+        "moodle-report_eventlist-sectionhide": {
+            "jsfiles": [
+                "sectionhide.js"
+            ]
+        }
+    }
+}

@@ -1,0 +1,27 @@
+
+.path-admin-tool-eventlist-type-dec {
+    font-weight: bold;
+    color: red;
+}
+
+.path-admin-tool-eventlist-type-parameter {
+    padding-left: 30px;
+    color: #2A33A6;
+}
+
+.path-admin-tool-eventlist-detail-label {
+    font-weight: bold;
+}
+
+.path-admin-tool-eventlist-name-path {
+    color: #888;
+    font-size: 0.75em;
+}
+
+.path-admin-tool-eventlist-datatable-table > div > table {
+    width: 100%;
+}
+
+.path-admin-tool-eventlist-code-hidden {
+    display: none;
+}

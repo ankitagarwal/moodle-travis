@@ -1,0 +1,10 @@
+{
+    "moodle-report_eventlist-sectionhide": {
+        "requires": [
+            "base",
+            "event",
+            "node",
+            "node-event-delegate"
+        ]
+    }
+}
