@@ -457,6 +457,28 @@ abstract class base implements \IteratorAggregate {
     }
 
     /**
+     * Get static information about an event.
+     * This is used in reports and is not for general use.
+     *
+     * @return array Static information about the event.
+     */
+    public static final function get_static_info() {
+        // Var \core\event\base $event.
+        $event = new static();
+        // Set static event data specific for child class.
+        $event->init();
+        return array(
+            'eventname' => $event->data['eventname'],
+            'component' => $event->data['component'],
+            'target' => $event->data['target'],
+            'action' => $event->data['action'],
+            'crud' => $event->data['crud'],
+            'edulevel' => $event->data['edulevel'],
+            'objecttable' => $event->data['objecttable'],
+        );
+    }
+
+    /**
      * Returns event context.
      * @return \context
      */
