@@ -808,18 +808,12 @@ function calendar_get_events_by_id($eventids) {
  * @return string $content return available control for the calender in html
  */
 function calendar_top_controls($type, $data) {
-    global $CFG, $PAGE;
     $content = '';
     if(!isset($data['d'])) {
         $data['d'] = 1;
     }
 
-    // Ensure course id passed if relevant
     // Required due to changes in view/lib.php mainly (calendar_session_vars())
-    $courseid = '';
-    if (!empty($data['id'])) {
-        $courseid = '&amp;course='.$data['id'];
-    }
 
     if(!checkdate($data['m'], $data['d'], $data['y'])) {
         $time = time();
@@ -831,7 +825,11 @@ function calendar_top_controls($type, $data) {
 
     $data['m'] = $date['mon'];
     $data['y'] = $date['year'];
-    $urlbase = $PAGE->url;
+    $urlbase =  new moodle_url(CALENDAR_URL.'view.php');
+    // Ensure course id passed if relevant.
+    if (!empty($data['id'])) {
+        $urlbase->param('course', $data['id']);
+    }
 
     //Accessibility: calendar block controls, replaced <table> with <div>.
     //$nexttext = link_arrow_right(get_string('monthnext', 'access'), $url='', $accesshide=true);
@@ -839,12 +837,13 @@ function calendar_top_controls($type, $data) {
 
     switch($type) {
         case 'frontpage':
+            $urlbase->param('view', 'month');
             list($prevmonth, $prevyear) = calendar_sub_month($data['m'], $data['y']);
             list($nextmonth, $nextyear) = calendar_add_month($data['m'], $data['y']);
             $nextlink = calendar_get_link_next(get_string('monthnext', 'access'), $urlbase, 0, $nextmonth, $nextyear, true);
             $prevlink = calendar_get_link_previous(get_string('monthprev', 'access'), $urlbase, 0, $prevmonth, $prevyear, true);
 
-            $calendarlink = calendar_get_link_href(new moodle_url(CALENDAR_URL.'view.php', array('view'=>'month')), 1, $data['m'], $data['y']);
+            $calendarlink = calendar_get_link_href($urlbase, 1, $data['m'], $data['y']);
             if (!empty($data['id'])) {
                 $calendarlink->param('course', $data['id']);
             }
@@ -866,12 +865,13 @@ function calendar_top_controls($type, $data) {
 
             break;
         case 'course':
+            $urlbase->param('view', 'month');
             list($prevmonth, $prevyear) = calendar_sub_month($data['m'], $data['y']);
             list($nextmonth, $nextyear) = calendar_add_month($data['m'], $data['y']);
             $nextlink = calendar_get_link_next(get_string('monthnext', 'access'), $urlbase, 0, $nextmonth, $nextyear, true);
             $prevlink = calendar_get_link_previous(get_string('monthprev', 'access'), $urlbase, 0, $prevmonth, $prevyear, true);
 
-            $calendarlink = calendar_get_link_href(new moodle_url(CALENDAR_URL.'view.php', array('view'=>'month')), 1, $data['m'], $data['y']);
+            $calendarlink = calendar_get_link_href($urlbase, 1, $data['m'], $data['y']);
             if (!empty($data['id'])) {
                 $calendarlink->param('course', $data['id']);
             }
@@ -892,7 +892,8 @@ function calendar_top_controls($type, $data) {
             $content .= html_writer::end_tag('div');
             break;
         case 'upcoming':
-            $calendarlink = calendar_get_link_href(new moodle_url(CALENDAR_URL.'view.php', array('view'=>'upcoming')), 1, $data['m'], $data['y']);
+            $urlbase->param('view', 'upcoming');
+            $calendarlink = calendar_get_link_href($urlbase, 1, $data['m'], $data['y']);
             if (!empty($data['id'])) {
                 $calendarlink->param('course', $data['id']);
             }
@@ -900,7 +901,8 @@ function calendar_top_controls($type, $data) {
             $content .= html_writer::tag('div', $calendarlink, array('class'=>'centered'));
             break;
         case 'display':
-            $calendarlink = calendar_get_link_href(new moodle_url(CALENDAR_URL.'view.php', array('view'=>'month')), 1, $data['m'], $data['y']);
+            $urlbase->param('view', 'month');
+            $calendarlink = calendar_get_link_href($urlbase, 1, $data['m'], $data['y']);
             if (!empty($data['id'])) {
                 $calendarlink->param('course', $data['id']);
             }
@@ -908,12 +910,15 @@ function calendar_top_controls($type, $data) {
             $content .= html_writer::tag('h3', $calendarlink);
             break;
         case 'month':
+            $urlbase->param('view', 'month');
             list($prevmonth, $prevyear) = calendar_sub_month($data['m'], $data['y']);
             list($nextmonth, $nextyear) = calendar_add_month($data['m'], $data['y']);
             $prevdate = make_timestamp($prevyear, $prevmonth, 1);
             $nextdate = make_timestamp($nextyear, $nextmonth, 1);
-            $prevlink = calendar_get_link_previous(userdate($prevdate, get_string('strftimemonthyear')), 'view.php?view=month'.$courseid.'&amp;', 1, $prevmonth, $prevyear);
-            $nextlink = calendar_get_link_next(userdate($nextdate, get_string('strftimemonthyear')), 'view.php?view=month'.$courseid.'&amp;', 1, $nextmonth, $nextyear);
+            $prevlink = calendar_get_link_previous(userdate($prevdate, get_string('strftimemonthyear')), $urlbase, 1, $prevmonth,
+                    $prevyear);
+            $nextlink = calendar_get_link_next(userdate($nextdate, get_string('strftimemonthyear')), $urlbase, 1, $nextmonth,
+                    $nextyear);
 
             if (right_to_left()) {
                 $left = $nextlink;
@@ -930,14 +935,15 @@ function calendar_top_controls($type, $data) {
             $content .= html_writer::end_tag('div')."\n";
             break;
         case 'day':
+            $urlbase->param('view', 'day');
             $days = calendar_get_days();
             $data['d'] = $date['mday']; // Just for convenience
             $prevdate = usergetdate(make_timestamp($data['y'], $data['m'], $data['d'] - 1));
             $nextdate = usergetdate(make_timestamp($data['y'], $data['m'], $data['d'] + 1));
             $prevname = calendar_wday_name($days[$prevdate['wday']]);
             $nextname = calendar_wday_name($days[$nextdate['wday']]);
-            $prevlink = calendar_get_link_previous($prevname, 'view.php?view=day'.$courseid.'&amp;', $prevdate['mday'], $prevdate['mon'], $prevdate['year']);
-            $nextlink = calendar_get_link_next($nextname, 'view.php?view=day'.$courseid.'&amp;', $nextdate['mday'], $nextdate['mon'], $nextdate['year']);
+            $prevlink = calendar_get_link_previous($prevname, $urlbase, $prevdate['mday'], $prevdate['mon'], $prevdate['year']);
+            $nextlink = calendar_get_link_next($nextname, $urlbase, $nextdate['mday'], $nextdate['mon'], $nextdate['year']);
 
             if (right_to_left()) {
                 $left = $nextlink;
