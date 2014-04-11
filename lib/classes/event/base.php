@@ -245,10 +245,10 @@ abstract class base implements \IteratorAggregate {
             if ($expectedcourseid != $event->data['courseid']) {
                 debugging("Inconsistent courseid - context combination detected.", DEBUG_DEVELOPER);
             }
-        }
 
-        // Let developers validate their custom data (such as $this->data['other'], contextlevel, etc.).
-        $event->validate_data();
+            // Let developers validate their custom data (such as $this->data['other'], contextlevel, etc.).
+            $event->validate_data();
+        }
 
         return $event;
     }

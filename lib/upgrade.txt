@@ -10,6 +10,7 @@ Events and Logging:
 * Significant changes in Logging API. For upgrading existing events_trigger() and
   add_to_log() see http://docs.moodle.org/dev/Migrating_logging_calls_in_plugins
   For accessing logs from plugins see http://docs.moodle.org/dev/Migrating_log_access_in_reports
+* Validations in events' validate_data() is called only when debug level is set to developer.
 
 DEPRECATIONS:
 * $module uses in mod/xxx/version.php files is now deprecated. Please use $plugin instead. It will be removed in Moodle 2.10.
