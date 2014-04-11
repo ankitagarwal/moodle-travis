@@ -43,6 +43,7 @@ $string['eventcode'] = 'Event Code:';
 $string['eventname'] = 'Event name';
 $string['filtertitle'] = 'Filter';
 $string['filter'] = 'Filter';
+$string['legacyevent'] = 'Legacy event: ';
 $string['name'] = 'Name';
 $string['objecttable'] = 'Object table';
 $string['other'] = 'Other';

@@ -109,6 +109,12 @@ class report_eventlist_renderer extends plugin_renderer_base {
             $html .= html_writer::empty_tag('br');
         }
 
+        if (isset($eventinformation['legacyevent'])) {
+            $html .= html_writer::span(get_string('legacyevent', 'report_eventlist'), 'path-admin-tool-eventlist-detail-label');
+            $html .= html_writer::span($eventinformation['legacyevent']);
+            $html .= html_writer::empty_tag('br');
+        }
+
         if (isset($eventinformation['parentclass'])) {
             $url = new moodle_url('eventdetail.php', array('eventname' => $eventinformation['parentclass']));
             $html .= html_writer::span(get_string('parentevent', 'report_eventlist'), 'path-admin-tool-eventlist-detail-label');
