@@ -4203,7 +4203,7 @@ function delete_user(stdClass $user) {
     $olduser = clone $user;
 
     // Keep a copy of user context, we need it for event.
-    $usercontext = context_user::instance($user->id);
+    $usercontext = context_user::instance($user->id, MUST_EXIST);
 
     // Delete all grades - backup is kept in grade_grades_history table.
     grade_user_delete($user->id);

@@ -1540,7 +1540,7 @@ class restore_course_structure_step extends restore_structure_step {
             $tags[] = $data->rawname;
             // Send all the tags back to the course
             tag_set('course', $this->get_courseid(), $tags, 'core',
-                context_course::instance($this->get_courseid())->id);
+                context_course::instance($this->get_courseid(), MUST_EXIST)->id);
         }
     }
 

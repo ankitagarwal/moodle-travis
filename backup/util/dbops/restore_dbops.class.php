@@ -1187,7 +1187,7 @@ abstract class restore_dbops {
             // but for deleted users that don't have a context anymore (MDL-30192). We are done for them
             // and nothing else (custom fields, prefs, tags, files...) will be created.
             if (empty($user->deleted)) {
-                $newuserctxid = $user->deleted ? 0 : context_user::instance($newuserid)->id;
+                $newuserctxid = $user->deleted ? 0 : context_user::instance($newuserid, MUST_EXIST)->id;
                 self::set_backup_ids_record($restoreid, 'context', $recuser->parentitemid, $newuserctxid);
 
                 // Process custom fields
@@ -1214,6 +1214,9 @@ abstract class restore_dbops {
                     foreach($user->tags['tag'] as $usertag) {
                         $usertag = (object)$usertag;
                         $tags[] = $usertag->rawname;
+                    }
+                    if (empty($newuserctxid)) {
+                        $newuserctxid = null; // Tag apis expect a null contextid not 0.
                     }
                     tag_set('user', $newuserid, $tags, 'core', $newuserctxid);
                 }

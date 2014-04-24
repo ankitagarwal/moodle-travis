@@ -1011,7 +1011,7 @@ function tag_assign($record_type, $record_id, $tagid, $ordering, $userid = 0, $c
         $tag_instance_object->timecreated  = time();
         $tag_instance_object->timemodified = $tag_instance_object->timecreated;
         $tag_instance_object->tiuserid     = $userid;
-
+        print_object($tag_instance_object);
         $tag_instance_object->id = $DB->insert_record('tag_instance', $tag_instance_object);
     }
 
