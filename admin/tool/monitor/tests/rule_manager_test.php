@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 
-class rule_manager_testcase extends advanced_testcase {
+class tool_monitor_rule_manager_testcase extends advanced_testcase {
 
     /**
      * Test add_rule method.
@@ -47,15 +47,17 @@ class rule_manager_testcase extends advanced_testcase {
         $rule->plugin = 'core';
         $rule->eventname = '\core\event\course_updated';
         $rule->description = 'test description 1';
+        $rule->descriptionformat = FORMAT_HTML;
         $rule->frequency = 15;
-        $rule->message_template = 'test template message';
+        $rule->template = 'test template message';
+        $rule->templateformat = FORMAT_HTML;
         $rule->timewindow = 300;
         $rule->timecreated = $now;
         $rule->timemodified = $now;
 
         $ruledata = \tool_monitor\rule_manager::add_rule($rule);
         foreach ($rule as $prop => $value) {
-            $this->assertEquals($value, $ruledata->$prop);
+            $this->assertEquals($ruledata->$prop, $value);
         }
     }
 
@@ -70,7 +72,7 @@ class rule_manager_testcase extends advanced_testcase {
         $rule = $monitorgenerator->create_rule();
         $rules1 = \tool_monitor\rule_manager::get_rule($rule->id);
         $this->assertInstanceOf('tool_monitor\rule', $rules1);
-        $this->assertEquals($rule, $rules1);
+        $this->assertEquals($rules1, $rule);
     }
 
     /**
