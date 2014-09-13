@@ -68,14 +68,20 @@ class tool_monitor_generator extends testing_module_generator {
         if (!isset($record->description)) {
             $record->description = 'Rule description ' . $i;
         }
+        if (!isset($record->descriptionformat)) {
+            $record->descriptionformat = FORMAT_HTML;
+        }
         if (!isset($record->frequency)) {
             $record->frequency = 5;
         }
         if (!isset($record->minutes)) {
             $record->minutes = 5;
         }
-        if (!isset($record->message_template)) {
-            $record->message_template = 'Rule message template ' . $i;
+        if (!isset($record->template)) {
+            $record->template = 'Rule message template ' . $i;
+        }
+        if (!isset($record->templateoformat)) {
+            $record->templateformat = FORMAT_HTML;
         }
         if (!isset($record->timewindow)) {
             $record->timewindow = $record->minutes * 60;
@@ -93,6 +99,7 @@ class tool_monitor_generator extends testing_module_generator {
             $record->eventname = '\core\event\blog_entry_created';
         }
 
+        unset($record->minutes); // Remove the minutes shortcut to the timewindow.
         return \tool_monitor\rule_manager::add_rule($record);
     }
 
