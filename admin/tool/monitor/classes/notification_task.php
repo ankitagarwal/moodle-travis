@@ -15,17 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version info
- *
- * This file contains version information about tool_monitor.
+ * This file defines an adhoc task to send notifications.
  *
  * @package    tool_monitor
  * @copyright  2014 onwards Ankit Agarwal <ankit.agrr@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+namespace tool_monitor;
 
-$plugin->version   = 2014061900.01;    // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires  = 2014061900;       // Requires this Moodle version.
-$plugin->component = 'tool_monitor'; // Full name of the plugin (used for diagnostics).
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Adhock class, used to send notifications to users.
+ *
+ * @since      Moodle 2.8
+ * @package    tool_monitor
+ * @copyright  2014 onwards Ankit Agarwal <ankit.agrr@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class notification_task extends \core\task\adhoc_task {
+
+    /**
+     * Send out messages.
+     */
+    public function execute() {
+        foreach ($this->get_custom_data() as $message) {
+            message_send($message);
+        }
+    }
+}

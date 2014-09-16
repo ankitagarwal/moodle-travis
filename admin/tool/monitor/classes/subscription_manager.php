@@ -162,11 +162,11 @@ class subscription_manager {
     /**
      * Return a list of subscriptions for a given event.
      *
-     * @param \core\event\base $event the event object.
+     * @param \stdClass $event the event object.
      *
      * @return array
      */
-    public static function get_subscriptions_by_event(\core\event\base $event) {
+    public static function get_subscriptions_by_event(\stdClass $event) {
         global $DB;
 
         $sql = self::get_subscription_join_rule_sql();
@@ -177,7 +177,6 @@ class subscription_manager {
             $sql .= "WHERE r.eventname = :eventname AND s.courseid = :courseid";
             $params = array('eventname' => $event->eventname, 'courseid' => $event->courseid);
         }
-
         return $DB->get_records_sql($sql, $params);
     }
 
