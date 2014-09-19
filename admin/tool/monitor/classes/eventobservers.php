@@ -127,12 +127,14 @@ class eventobservers {
                                 'starttime' => $starttime);
                     } else {
                         // Specific module.
-                        $where = "eventname = :eventname AND courseid = :courseid AND cmid = :cmid AND timecreated > :starttime";
+                        $where = "eventname = :eventname AND courseid = :courseid AND contextinstanceid = :cmid
+                                AND timecreated > :starttime";
                         $params = array('eventname' => $eventobj->eventname, 'courseid' => $eventobj->courseid,
-                                'cmid' => $eventobj->cmid, 'starttime' => $starttime);
+                                'cmid' => $eventobj->contextinstanceid, 'starttime' => $starttime);
                     }
                 }
-                $sql = $select . "WHERE " . $where;
+                echo $sql = $select . "WHERE " . $where;
+                print_object($params);
                 $count = $DB->count_records_sql($sql, $params);
                 if (!empty($count) && $count > $subscription->frequency) {
                     $messagestosend[] = $this->generate_message($subscription, $eventobj);
