@@ -63,7 +63,7 @@ class rule_manager {
         $rule->courseid = $mformdata->courseid;
         $rule->name = $mformdata->name;
         $rule->plugin = $mformdata->plugin;
-        $rule->eventname = '\' . '$mformdata->eventname;
+        $rule->eventname = '\\' . $mformdata->eventname;
         $rule->description = $mformdata->description['text'];
         $rule->descriptionformat = $mformdata->description['format'];
         $rule->frequency = $mformdata->frequency;
