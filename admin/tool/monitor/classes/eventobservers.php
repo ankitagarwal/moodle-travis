@@ -133,8 +133,7 @@ class eventobservers {
                                 'cmid' => $eventobj->contextinstanceid, 'starttime' => $starttime);
                     }
                 }
-                echo $sql = $select . "WHERE " . $where;
-                print_object($params);
+                $sql = $select . "WHERE " . $where;
                 $count = $DB->count_records_sql($sql, $params);
                 if (!empty($count) && $count > $subscription->frequency) {
                     $messagestosend[] = $this->generate_message($subscription, $eventobj);
