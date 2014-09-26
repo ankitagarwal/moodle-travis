@@ -37,6 +37,146 @@ defined('MOODLE_INTERNAL') || die();
 class eventlist {
 
     /**
+     * Convenience method. Returns all of the core events either with or without details.
+     *
+     * @param bool $abstract True will return all events. False returns events with no abstract classes.
+     * @return array All events.
+     */
+    public static function get_all_events_list($abstract = false, $plugin = null) {
+        $events = array_merge(array('core' => self::get_core_events_list($abstract)), self::get_non_core_event_list($abstract));
+
+        if ($plugin) {
+            return $events[$plugin];
+        }
+        return $events;
+    }
+
+    /**
+     * Return all of the core event files.
+     *
+     * @param bool $abstract True will return all events. False returns events with no abstract classes.
+     * @return array Core events.
+     */
+    public static function get_core_events_list($abstract = false) {
+        global $CFG;
+
+        // Disable developer debugging as deprecated events will fire warnings.
+        // Setup backup variables to restore the following settings back to what they were when we are finished.
+        $debuglevel          = $CFG->debug;
+        $debugdisplay        = $CFG->debugdisplay;
+        $debugdeveloper      = $CFG->debugdeveloper;
+        $CFG->debug          = 0;
+        $CFG->debugdisplay   = false;
+        $CFG->debugdeveloper = false;
+
+        $eventinformation = array();
+        $directory = $CFG->libdir . '/classes/event';
+        $files = self::get_file_list($directory);
+
+        // Remove exceptional events that will cause problems being displayed.
+        if (isset($files['unknown_logged'])) {
+            unset($files['unknown_logged']);
+        }
+        foreach ($files as $file => $location) {
+            $classname = '\\core\\event\\' . $file;
+            // Check to see if this is actually a valid event.
+            if (method_exists($classname, 'get_static_info')) {
+                if (!$abstract) {
+                    $ref = new \ReflectionClass($classname);
+                    // Ignore abstracts.
+                    if (!$ref->isAbstract() && $file != 'manager') {
+                        $eventinformation[$classname] = $classname::get_name();
+                    }
+                } else {
+                    $eventinformation[$classname] = $classname::get_name();
+                }
+            }
+        }
+        // Now enable developer debugging as event information has been retrieved.
+        $CFG->debug          = $debuglevel;
+        $CFG->debugdisplay   = $debugdisplay;
+        $CFG->debugdeveloper = $debugdeveloper;
+        return $eventinformation;
+    }
+
+    /**
+     * This function returns an array of all events for the plugins of the system.
+     *
+     * @param bool $abstract True will return details, but no abstract classes, False will return all events, but no details.
+     * @return array A list of events from all plug-ins.
+     */
+    public static function get_non_core_event_list($abstract = false) {
+        global $CFG;
+        // Disable developer debugging as deprecated events will fire warnings.
+        // Setup backup variables to restore the following settings back to what they were when we are finished.
+        $debuglevel          = $CFG->debug;
+        $debugdisplay        = $CFG->debugdisplay;
+        $debugdeveloper      = $CFG->debugdeveloper;
+        $CFG->debug          = 0;
+        $CFG->debugdisplay   = false;
+        $CFG->debugdeveloper = false;
+
+        $noncorepluginlist = array();
+        $plugintypes = \core_component::get_plugin_types();
+        foreach ($plugintypes as $plugintype => $notused) {
+            $pluginlist = \core_component::get_plugin_list($plugintype);
+            foreach ($pluginlist as $plugin => $directory) {
+                $noncorepluginlist[$plugintype . '_' . $plugin] = array();
+                $plugindirectory = $directory . '/classes/event';
+                foreach (self::get_file_list($plugindirectory) as $eventname => $notused) {
+                    $plugineventname = '\\' . $plugintype . '_' . $plugin . '\\event\\' . $eventname;
+                    // Check that this is actually an event.
+                    if (method_exists($plugineventname, 'get_static_info')) {
+                        if (!$abstract) {
+                            $ref = new \ReflectionClass($plugineventname);
+                            if (!$ref->isAbstract() && $plugin != 'legacy' && $plugin != 'monitor') {
+                                $noncorepluginlist[$plugintype . '_' . $plugin][$plugineventname] = $plugineventname::get_name();
+                            }
+                        } else {
+                            $noncorepluginlist[$plugintype . '_' . $plugin][$plugineventname] = $plugineventname::get_name();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Now enable developer debugging as event information has been retrieved.
+        $CFG->debug          = $debuglevel;
+        $CFG->debugdisplay   = $debugdisplay;
+        $CFG->debugdeveloper = $debugdeveloper;
+
+        return $noncorepluginlist;
+    }
+
+    /**
+     * Returns a list of files with a full directory path in a specified directory.
+     *
+     * @param string $directory location of files.
+     * @return array full location of files from the specified directory.
+     */
+    protected static function get_file_list($directory) {
+        global $CFG;
+        $directoryroot = $CFG->dirroot;
+        $finalfiles = array();
+        if (is_dir($directory)) {
+            if ($handle = opendir($directory)) {
+                $files = scandir($directory);
+                foreach ($files as $file) {
+                    if ($file != '.' && $file != '..') {
+                        // Ignore the file if it is external to the system.
+                        if (strrpos($directory, $directoryroot) !== false) {
+                            $location = substr($directory, strlen($directoryroot));
+                            $name = substr($file, 0, -4);
+                            $finalfiles[$name] = $location  . '/' . $file;
+                        }
+                    }
+                }
+            }
+        }
+        return $finalfiles;
+    }
+
+    /**
      * Get a list of events present in the system.
      *
      * @param bool $withoutcomponent Return an eventlist without associated components.
@@ -44,10 +184,10 @@ class eventlist {
      * @return array list of events present in the system.
      */
     public static function get_all_eventlist($withoutcomponent = false) {
-        $classes = array_merge(\core_component::find_classes_in_subsystems('core', 'event', 'core\event\base', true),
-            \core_component::find_classes_in_plugins('*', 'event', 'core\event\base', true));
-        unset($classes['logstore_legacy']);
+        die();
+        $classes = $events = array_merge(array('core' => self::get_core_events_list()), self::get_non_core_event_list());
         $return = array();
+        print_object($classes);
         foreach ($classes as $component => $componentclasses) {
             foreach ($componentclasses as $fullpath => $classname) {
                 if (!isset($return[$component]) && !$withoutcomponent) {
