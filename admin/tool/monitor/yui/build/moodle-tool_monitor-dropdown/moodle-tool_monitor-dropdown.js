@@ -67,7 +67,7 @@ Y.extend(DropDown, Y.Base, {
      */
     updateEventsList: function() {
         var plugin = this.plugin.get('value'); // Get component name.
-        var namespace = plugin + '\\';
+        var namespace = '\\' + plugin + '\\';
         this.eventname.all(SELECTORS.OPTION).hide(); // Hide all options.
         this.eventname.all(SELECTORS.OPTION).each(function(node) {
             // Make sure we highlight only nodes with correct namespace.
