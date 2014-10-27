@@ -55,6 +55,8 @@ Y.extend(DropDown, Y.Base, {
     initializer: function() {
         this.plugin = Y.one(SELECTORS.PLUGIN);
         this.eventname = Y.one(SELECTORS.EVENTNAME);
+        var selected = this.eventname.get('value'); // Get selected event name.
+        this.updateEventsList(selected);
         this.plugin.on('change', this.updateEventsList, this);
     },
 
@@ -62,8 +64,9 @@ Y.extend(DropDown, Y.Base, {
      * Method to update the events list drop down when plugin list drop down is changed.
      *
      * @method updateEventsList
+     * @param {string} selected The options node value that should be selected.
      */
-    updateEventsList: function() {
+    updateEventsList: function(selected) {
         var node, options, choosenode;
         var plugin = this.plugin.get('value'); // Get component name.
         var namespace = '\\' + plugin + '\\';
@@ -79,6 +82,9 @@ Y.extend(DropDown, Y.Base, {
             // Make sure we highlight only nodes with correct namespace.
             if (key.substring(0, namespace.length) === namespace) {
                 node = Y.Node.create('<option value="' + key + '">' + value + '</option>');
+                if (key === selected) {
+                    node.set('selected', 'selected'); // If a node was selected before, select it again.
+                }
                 this.eventname.appendChild(node);
             }
         }, this);
