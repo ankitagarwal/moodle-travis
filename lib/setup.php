@@ -599,6 +599,7 @@ require_once($CFG->libdir .'/messagelib.php');      // Messagelib functions
 require_once($CFG->libdir .'/modinfolib.php');      // Cached information on course-module instances
 require_once($CFG->dirroot.'/cache/lib.php');       // Cache API
 
+set_config('enablemonitor', 1, 'tool_monitor');
 // make sure PHP is not severly misconfigured
 setup_validate_php_configuration();
 
