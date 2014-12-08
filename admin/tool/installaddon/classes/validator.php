@@ -360,6 +360,17 @@ class tool_installaddon_validator {
             $this->add_message(self::INFO, 'release', $this->versionphp['release']);
         }
 
+        // Validate the dependencies.
+        if (isset($info[$type.'->dependencies'])) {
+            $this->versionphp['dependencies'] = $info[$type.'->dependencies'];
+            list($passed, $requires) = $this->check_plugin_dependencies();
+            if ($passed) {
+                $this->add_message(self::INFO, 'dependencies', $requires);
+            } else {
+                $this->add_message(self::ERROR, 'dependencies', $requires);
+            }
+        }
+
         return true;
     }
 
@@ -452,6 +463,56 @@ class tool_installaddon_validator {
     }
 
     // Helper methods //////////////////////////////////////////////////////////
+
+    /**
+     * Verify if all dependencies of the given plugin is satisfied or not.
+     *
+     * @return array An array with the first element being true/false flag indicating if the checks passed or not and the second
+     *      element being the list of dependencies to be displayed to the user.
+     * @throws coding_exception
+     */
+    protected function check_plugin_dependencies() {
+        $requires = array();
+        $dependencies = $this->versionphp['dependencies'];
+        $pluginman = core_plugin_manager::instance();
+        $checkpassed = true;
+        foreach ($dependencies as $component => $requiredversion) {
+            $otherplugin = $pluginman->get_plugin_info($component);
+            $actions = array();
+            if (is_null($otherplugin)) {
+                // The required plugin is not installed.
+                $checkpassed = false;
+                $class = 'requires-failed requires-missing';
+                $installurl = new moodle_url('https://moodle.org/plugins/view.php', array('plugin' => $component));
+                $uploadurl = new moodle_url('/admin/tool/installaddon/');
+                $actions[] = html_writer::link($installurl, get_string('dependencyinstall', 'core_plugin'));
+                $actions[] = html_writer::link($uploadurl, get_string('dependencyupload', 'core_plugin'));
+            } else if ($requiredversion != ANY_VERSION and $otherplugin->versiondisk < $requiredversion) {
+                // The required plugin is installed but needs to be updated.
+                $checkpassed = false;
+                $class = 'requires-failed requires-outdated';
+                if (!$otherplugin->is_standard()) {
+                    $updateurl = new moodle_url($this->page->url, array('sesskey' => sesskey(), 'fetchupdates' => 1));
+                    $actions[] = html_writer::link($updateurl, get_string('checkforupdates', 'core_plugin'));
+                }
+            } else {
+                // Already installed plugin with sufficient version.
+                $class = 'requires-ok';
+            }
+            if ($requiredversion != ANY_VERSION) {
+                $str = 'otherpluginversion';
+            } else {
+                $str = 'otherplugin';
+            }
+            $requires[] = html_writer::tag('li',
+                html_writer::div(get_string($str, 'core_plugin',
+                    array('component' => $component, 'version' => $requiredversion)), 'component').
+                html_writer::div(implode(' | ', $actions), 'actions'),
+                array('class' => $class));
+        }
+        $requires = html_writer::tag('ul', implode("\n", $requires));
+        return array($checkpassed, $requires);
+    }
 
     /**
      * Get as much information from existing version.php as possible
