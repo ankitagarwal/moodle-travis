@@ -361,6 +361,7 @@ class tool_installaddon_validator {
         }
 
         // Validate the dependencies.
+        print_object($info);
         if (isset($info[$type.'->dependencies'])) {
             $this->versionphp['dependencies'] = $info[$type.'->dependencies'];
             list($passed, $requires) = $this->check_plugin_dependencies();
@@ -523,16 +524,19 @@ class tool_installaddon_validator {
     protected function parse_version_php($fullpath) {
 
         $content = $this->get_stripped_file_contents($fullpath);
+        print_r($content);
 
         preg_match_all('#\$((plugin|module)\->(version|maturity|release|requires))=()(\d+(\.\d+)?);#m', $content, $matches1);
         preg_match_all('#\$((plugin|module)\->(maturity))=()(MATURITY_\w+);#m', $content, $matches2);
         preg_match_all('#\$((plugin|module)\->(release))=([\'"])(.*?)\4;#m', $content, $matches3);
         preg_match_all('#\$((plugin|module)\->(component))=([\'"])(.+?_.+?)\4;#m', $content, $matches4);
+        preg_match_all('#\$((plugin|module)\->(dependencies))=(.*?);#m', $content, $matches5);
 
-        if (count($matches1[1]) + count($matches2[1]) + count($matches3[1]) + count($matches4[1])) {
+        print_r($matches5);
+        if (count($matches1[1]) + count($matches2[1]) + count($matches3[1]) + count($matches4[1]) + count($matches5[1])) {
             $info = array_combine(
-                array_merge($matches1[1], $matches2[1], $matches3[1], $matches4[1]),
-                array_merge($matches1[5], $matches2[5], $matches3[5], $matches4[5])
+                array_merge($matches1[1], $matches2[1], $matches3[1], $matches4[1], $matches5[1]),
+                array_merge($matches1[5], $matches2[5], $matches3[5], $matches4[5], $matches5[4])
             );
 
         } else {
