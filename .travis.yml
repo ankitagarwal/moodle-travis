@@ -14,7 +14,7 @@ before_script:
  - git remote -v
  - git fetch origin
  - ls -la
- - git reset --hard origin/master
+ - git reset --hard master
  - git checkout $MOODLE_VERSION
  - sudo apt-get update > /dev/null
  - composer self-update
