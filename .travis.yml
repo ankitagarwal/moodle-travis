@@ -12,7 +12,7 @@ before_script:
  - ls -la
  - git status
  - git remote -v
- - git pull origin/MDL-48556-master
+ - git pull origin MDL-48556-master
  - ls -la
  - git reset --hard master
  - git checkout $MOODLE_VERSION
