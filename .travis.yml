@@ -1,0 +1,35 @@
+notifications:
+  email:
+    recipients:
+      - ankit@moodle.com
+    on_success: never
+    on_failure: always
+before_install:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+language: php
+php:
+  - "5.4"
+env:
+  - DB=pgsql
+before_script:
+  - composer self-update
+  - sudo apt-get install -y --force-yes php5-curl php5-pgsql php5-intl php5-curl php5-dev php5-gd php5-mcrypt php5-tidy php5-xmlrpc
+  - cp config-dist.php config.php
+  - sh -c "sed -i -e s/\'password\'/\'\'/ -e s%example.com/moodle%moodle.travis/moodle% -e s%/home/example%$HOME% -e 's%\(\$CFG.*bht\)%\n\1%' -e 's%\(\$CFG.*phpunit\)%\n\1%' -e 's%\(\$CFG.*behat_wwwroot.*http://127\)%\n\1%' -e s%127.0.0.1/moodle%localhost:8000% config.php"
+  - cat config.php
+  - sh -c "psql -c 'create database moodle;' -U postgres"
+  - sh -c "sed -i s/\'username\'/\'postgres\'/ config.php"
+  - mkdir -m777 $HOME/moodledata
+  - mkdir -m777 $HOME/phpu_moodledata
+  - mkdir -m777 $HOME/bht_moodledata
+  - php admin/tool/behat/cli/init.php
+  - php admin/tool/phpunit/cli/init.php
+  - "(php -S localhost:8000 &) 2> /dev/null > /dev/null"
+  - "wget http://selenium-release.storage.googleapis.com/2.44/selenium-server-standalone-2.44.0.jar"
+  - "(java -jar selenium-server-standalone-2.44.0.jar &) 2> /dev/null > /dev/null"
+  # Give time to selenium to start up.
+  - sleep 5
+script:
+  - vendor/bin/behat --config /home/travis/bht_moodledata/behat/behat.yml
+  - vendor/bin/phpunit
