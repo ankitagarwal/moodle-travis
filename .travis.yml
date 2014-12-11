@@ -11,6 +11,8 @@ env:
 before_script:
  - cd ../moodle
  - git fetch origin
+ - ls
+ - git checkout origin/master
  - git checkout $MOODLE_VERSION
  - sudo apt-get update > /dev/null
  - composer self-update
